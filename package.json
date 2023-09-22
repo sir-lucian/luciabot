@@ -1,0 +1,19 @@
+{
+  "name": "twitchstreamalert",
+  "version": "1.0.0",
+  "description": "Alert streaming on Discord",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Sir Lucian",
+  "license": "ISC",
+  "dependencies": {
+    "@twurple/api": "^7.0.2",
+    "@twurple/auth": "^7.0.2",
+    "@twurple/eventsub-ws": "^7.0.2",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
+  }
+}
