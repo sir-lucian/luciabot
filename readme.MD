@@ -1,13 +1,7 @@
-What is needed?
+# LUCIABOT
 
-1. Docker Desktop
+<h2>How to add data to commands:</h2>
 
-How to use LuciaBot
-
-1. open cmd at the root folder of project
-2. run "docker build -t luciabot:latest ."
-3. run "docker compose up -d"
-
-How to stop
-
-1. run "docker compose down"
+1. Go to JSON files in the 'commands' folder 
+2. Edit data according to JSON format
+3. Commit changes

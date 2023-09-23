@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require("discord.js");
-const fs = require("fs");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,15 +13,9 @@ module.exports = {
             await interaction.reply(response[Math.floor(Math.random() * response.length)]);
         }
         else {
-            fs.readFile("commands/heroter.json", async (error, data) => {
-                if (error) {
-                    console.error(error);
-                }
-
-                const response = await JSON.parse(data);
-                await interaction.reply(response.quotes[Math.floor(Math.random() * response.quotes.length)]);
-            });
-            
+            const response = await fetch("https://raw.githubusercontent.com/lucidkarn/luciabot/master/commands/heroter.json");
+            const heroter = await response.json();
+            await interaction.reply(heroter.quotes[Math.floor(Math.random() * heroter.quotes.length)]);
         }
     }
 }
