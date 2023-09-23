@@ -1,4 +1,14 @@
-const { Routes } = require("discord.js");
+const { Client, IntentsBitField, Routes } = require("discord.js");
+
+/* Initialize Lucia Discord App */
+const luciaClient = new Client({
+    intents: [
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent,
+    ],
+});
 
 async function clearAllCommands(rest, clientId, discordServerId) {
     // For guild-based commands
