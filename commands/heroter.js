@@ -7,7 +7,7 @@ module.exports = {
     async execute(interaction) {   
         if (await interaction.user.id === `167376301148209152`) {
             const response = [
-                "มีอะไรคะพี่ Heeroter <:LuciaLetMeIn:1110190132813905940> ",
+                "มีอะไรคะพี่ Heeroter <:LuciaLetMeIn:1110190132813905940>",
                 "พี่อะหยุดดิ๊ <:LuciaSplash:1114455882357542964>"
             ]
             await interaction.reply(response[Math.floor(Math.random() * response.length)]);
