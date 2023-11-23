@@ -1,7 +1,11 @@
 # LUCIABOT
 
-<h2>How to add data to commands:</h2>
+![LuciaBot](https://lucian.solutions/images/158t.png "LuciaBot")
 
-1. Go to JSON files in the 'commands' folder 
-2. Edit data according to JSON format
-3. Commit changes
+Personal assistant Lucia-chan will serve you with desicions that are unsettled.
+
+## Functions
+
+| Commands | Description |
+| --- | --- |
+| **/foodmenu** | Will give you a food menu if you can't decide. |
