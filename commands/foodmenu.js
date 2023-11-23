@@ -13,7 +13,19 @@ module.exports = {
                     { name: 'noodles', value: 1 },
                     { name: 'soup', value: 2 },
                     { name: 'others', value: 3 },
-                )),
+                ))
+        .setAutocomplete(true),
+    async autocomplete(interaction) {
+        const focusedValue = interaction.options.getFocused(true);
+        let choices;
+        if (focusedOption.name === 'category') {
+            choices = ['rice', 'noodles', 'soup', 'others'];
+        }
+        const filtered = choices.filter(choice => choice.startsWith(focusedValue));
+        await interaction.respond(
+            filtered.map(choice => ({ name: choice, value: choices.indexOf(choice) })),
+        );
+    },
     async execute(interaction) {
         const response = await fetch("https://raw.githubusercontent.com/lucidkarn/luciabot/master/commands/foodmenu.json");
         const foodmenu = await response.json();
