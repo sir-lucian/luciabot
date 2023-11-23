@@ -40,14 +40,13 @@ module.exports = {
                             case 0: // With Prefix
                                 reply += foodmenu.rice.wokstation.prefix[Math.floor(Math.random() * foodmenu.rice.wokstation.prefix.length)];
                                 reply += foodmenu.rice.wokstation.meat[Math.floor(Math.random() * foodmenu.rice.wokstation.meat.length)];
-                                reply += foodmenu.rice.wokstation.toppings[Math.floor(Math.random() * foodmenu.rice.wokstation.toppings.length)];
                                 break;
                             case 1: // With Suffix
                             default:
                                 reply += foodmenu.rice.wokstation.meat[Math.floor(Math.random() * foodmenu.rice.wokstation.meat.length)];
                                 reply += foodmenu.rice.wokstation.suffix[Math.floor(Math.random() * foodmenu.rice.wokstation.suffix.length)];
-                                reply += foodmenu.rice.wokstation.toppings[Math.floor(Math.random() * foodmenu.rice.wokstation.toppings.length)];
                         }
+                        reply += foodmenu.rice.wokstation.toppings[Math.floor(Math.random() * foodmenu.rice.wokstation.toppings.length)];
                         break;
                     case 1: // Eggs
                         reply += foodmenu.rice.eggs.method[Math.floor(Math.random() * foodmenu.rice.eggs.method.length)];
