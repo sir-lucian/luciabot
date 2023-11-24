@@ -1,8 +1,9 @@
 require("dotenv").config();
 const { REST, Routes } = require("discord.js");
 
+const discordClientId = process.env.DISCORD_CLIENT_ID;
+const discordGuildId = process.env.DISCORD_SERVER_ID;
 const discordToken = process.env.DISCORD_TOKEN;
-const discordChannel = process.env.DISCORD_CHANNEL_ID;
 
 const rest = new REST().setToken(discordToken);
 
@@ -18,4 +19,4 @@ async function clearAllCommands(rest, clientId, discordServerId) {
         .catch(console.error);
 }
 
-clearAllCommands(rest, discordToken, discordChannel);
+clearAllCommands(rest, discordClientId, discordGuildId);

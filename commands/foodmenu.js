@@ -5,34 +5,23 @@ module.exports = {
         .setName('foodmenu')
         .setDescription('Randomly chooses menu to be cooked or bought.')
         .addStringOption(option =>
-            option.setName('category')
+            option
+                .setName('category')
                 .setDescription('Specify which type of food you want to eat.')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'rice', value: 0 },
-                    { name: 'noodles', value: 1 },
-                    { name: 'soup', value: 2 },
-                    { name: 'others', value: 3 },
-                ))
-        .setAutocomplete(true),
-    async autocomplete(interaction) {
-        const focusedValue = interaction.options.getFocused(true);
-        let choices;
-        if (focusedOption.name === 'category') {
-            choices = ['rice', 'noodles', 'soup', 'others'];
-        }
-        const filtered = choices.filter(choice => choice.startsWith(focusedValue));
-        await interaction.respond(
-            filtered.map(choice => ({ name: choice, value: choices.indexOf(choice) })),
-        );
-    },
+                    { name: 'rice', value: '0' },
+                    { name: 'noodles', value: '1' },
+                    { name: 'soup', value: '2' },
+                    { name: 'others', value: '3' },
+                )),
     async execute(interaction) {
         const response = await fetch("https://raw.githubusercontent.com/lucidkarn/luciabot/master/commands/foodmenu.json");
         const foodmenu = await response.json();
-        const options = interaction.options.getString('category') ?? Math.floor(Math.random() * 4);
+        const options = interaction.options.getString('category') ?? Math.floor(Math.random() * 4).toString();
         let reply = "";
         switch (options) {
-            case 0: // Rice
+            case '0': // Rice
                 reply += "ข้าว";
                 switch (Math.floor(Math.random() * 3)) {
                     case 0: // Wok Station
@@ -57,7 +46,7 @@ module.exports = {
                         reply += foodmenu.rice.others[Math.floor(Math.random() * foodmenu.rice.others.length)];
                 }
                 break;
-            case 1: // Noodles
+            case '1': // Noodles
                 reply += "ก๋วยเตี๋ยว";
                 switch (Math.floor(Math.random() * 2)) {
                     case 0: // Type
@@ -68,10 +57,10 @@ module.exports = {
                         reply = foodmenu.noodles.others[Math.floor(Math.random() * foodmenu.noodles.others.length)];
                 }
                 break;
-            case 2: // Soup
+            case '2': // Soup
                 reply += foodmenu.soup[Math.floor(Math.random() * foodmenu.soup.length)];
                 break;
-            case 3: // Others
+            case '3': // Others
             default:
                 reply += foodmenu.others[Math.floor(Math.random() * foodmenu.others.length)];
         }

@@ -35,7 +35,7 @@ const rest = new REST().setToken(discordToken);
 
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(
-			Routes.applicationGuildCommands(discordClientId, discordGuildId),
+			Routes.applicationCommands(discordClientId),
 			{ body: commands },
 		);
 
