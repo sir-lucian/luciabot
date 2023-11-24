@@ -26,9 +26,9 @@ module.exports = {
         const response = await fetch("https://raw.githubusercontent.com/lucidkarn/luciabot/master/commands/foodmenu.json");
         const foodmenu = await response.json();
         const options = interaction.options.getString('category') ?? Math.floor(Math.random() * 4).toString();
-        const halal = interaction.options.getString('halal') ?? 'no';
+        const halal = interaction.options.getBoolean()
 
-        function randomMenu(options) {
+        async function randomMenu(options) {
             let reply = "";
             switch (options) {
                 case '0': // Rice
@@ -74,14 +74,14 @@ module.exports = {
                 default:
                     reply += foodmenu.others[Math.floor(Math.random() * foodmenu.others.length)];
             }
-            if (reply.match(/หมู|แฮม|เล้ง|ลาบ|น้ำตก/g) && halal == 'yes') {
+            if (reply.match(/หมู|แฮม|เล้ง|ลาบ|น้ำตก/g) && halal === 'yes') {
                 randomMenu(options);
             } else {
                 return reply;
             }
         }
         
-        const answer = randomMenu(options);
+        const answer = await randomMenu(options);
         interaction.reply(answer);
     }
 }
