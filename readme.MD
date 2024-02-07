@@ -2,7 +2,7 @@
 
 ![LuciaBot](https://lucian.solutions/images/231t.png "LuciaBot")
 
-Personal assistant Lucia-chan will serve you with desicions that are unsettled.
+Personal assistant Lucia-chan will decide things for you.
 
 ## Functions
 
