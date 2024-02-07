@@ -13,7 +13,7 @@ module.exports = {
                     { name: 'coffee', value: '0' },
                     { name: 'tea', value: '1' },
                     { name: 'juice', value: '2' },
-                    { name: 'soda', value: '3' }
+                    { name: 'soda', value: '3' },
                     { name: 'alcohol', value: '4' },))
         .addStringOption(option =>
             option
