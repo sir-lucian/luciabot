@@ -23,7 +23,7 @@ module.exports = {
                     { name: 'yes', value: 'yes' },
                     { name: 'no', value: 'no' },)),
     async execute(interaction) {
-        const response = await fetch("https://raw.githubusercontent.com/lucidkarn/luciabot/master/commands/foodmenu.json");
+        const response = await fetch("https://lucian.solutions/files/foodmenu.json");
         const foodmenu = await response.json();
         const options = interaction.options.getString('category') ?? Math.floor(Math.random() * 4).toString();
         const halal = interaction.options.getString('halal') ?? 'no';
