@@ -14,8 +14,7 @@ This sassy sister assistant Lucia-chan will guide you through social networks in
 
 ## Invite Lucia to your server
 
-> :Buttons
-> > :Button label=Invite to Discord, url=https://discord.com/api/oauth2/authorize?client_id=1128939520763633714&permissions=2147568640&scope=bot
+[![Invite to Discord]][https://discord.com/api/oauth2/authorize?client_id=1128939520763633714&permissions=2147568640&scope=bot]
 
 Click the button above to add Lucia to your Discord servers that you're managing!
 กดปุ่มด้านบนเพื่อเชิญน้องเข้าเซอเวอร์ดิสคอร์ดที่คุณดูแลอยู่!
