@@ -9,8 +9,8 @@ This sassy sister assistant Lucia-chan will guide you through social networks in
 
 | Commands | Description |
 | --- | --- |
-| **/foodmenu** | - Will provide you a food menu if you can't decide. - น้องจะเลือกเมนูอาหารให้คุณในเวลาที่คุณตัดสินใจไม่ได้ |
-| **/drinksmenu** | - Will suggest you a refreshing drink for your mood. - น้องจะแนะนำเครื่องดื่มให้คุณเพื่อให้คุณสดชื่น |
+| **/foodmenu** | Will provide you a food menu if you can't decide. <br /> น้องจะเลือกเมนูอาหารให้คุณในเวลาที่คุณตัดสินใจไม่ได้ |
+| **/drinksmenu** | Will suggest you a refreshing drink for your mood. <br /> น้องจะแนะนำเครื่องดื่มให้คุณเพื่อให้คุณสดชื่น |
 
 ## Invite Lucia to your server
 
