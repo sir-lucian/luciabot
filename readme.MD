@@ -2,7 +2,7 @@
 
 ![LuciaBot](https://lucian.solutions/images/231t.png "LuciaBot")
 
-This sassy sister assistant Lucia-chan will guide you through social networks in your Discord server.
+This sassy sister assistant Lucia-chan will guide you through social networks in your Discord server.  
 ผู้ช่วยน้องสาวสุดขี้เล่น น้องลูเซีย จะช่วยคุณเชื่อมต่อโซเชียลเน็ตเวิร์คต่างๆผ่านดิสคอร์ดเอง
 
 ## Functions
