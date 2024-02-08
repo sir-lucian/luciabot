@@ -53,6 +53,11 @@
     "soda": [
         "Coca-Cola",
         "Pepsi",
+        "Est",
+        "Mountain Dew",
+        "Monster",
+        "Redbull",
+        "G-Fuel",
         "7up",
         "Sprite",
         "Fanta",
@@ -79,7 +84,6 @@
         "รัม",
         "วอดก้า",
         "วิสกี้",
-        "ค็อกเทล",
-        "เครื่องดื่มชูกำลัง"
+        "ค็อกเทล"
     ]
 }
