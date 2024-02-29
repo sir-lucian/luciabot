@@ -1,7 +1,7 @@
 require("dotenv").config();
 const fs = require("node:fs");
 const path = require("node:path");
-const { ActivityType, Client, Collection, Events, GatewayIntentBits, IntentsBitField, REST, Routes } = require("discord.js");
+const { ActivityType, Client, Collection, Events, GatewayIntentBits, IntentsBitField } = require("discord.js");
 const { StaticAuthProvider } = require("@twurple/auth");
 const { ApiClient } = require("@twurple/api");
 const { EventSubWsListener } = require("@twurple/eventsub-ws");
