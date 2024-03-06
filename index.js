@@ -100,7 +100,7 @@ async function createListener(token) {
             luciaClient.channels.cache
                 .get(discordChannel)
                 .send(
-                    `**Lucian nii-san just went live!**\nLet's go visit the penthouse! <a:LuciaCaughtIn4K:1109180549920194591>\nhttps://twitch.tv/stlucian`
+                    `**Lucian nii-san just went live!**\nLet's go visit the penthouse! <a:LuciaCaughtIn4K:1214998758295601232>\nhttps://twitch.tv/stlucian`
                 );
 
             luciaClient.user.setPresence({
