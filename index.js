@@ -8,8 +8,11 @@ const { EventSubWsListener } = require("@twurple/eventsub-ws");
 
 const discordToken = process.env.DISCORD_TOKEN;
 const discordChannel = process.env.DISCORD_CHANNEL_ID;
+const nekosoulDiscordChannel = process.env.NEKOSOUL_CHANNEL_ID;
 
 const twitchUserID = process.env.TWITCH_USER_ID;
+const nekosoulUserID = process.env.NEKOSOUL_USER_ID;
+
 const twitchClientId = process.env.TWITCH_CLIENT_ID;
 const twitchClientSecret = process.env.TWITCH_CLIENT_SECRET;
 
@@ -116,6 +119,18 @@ async function createListener(token) {
 
             isStreaming = true;
         });
+        streamListener.onStreamOnline(nekosoulUserID, () => {
+            console.log(
+                `[${Date()}] Soul-chan just went live!: https://twitch.tv/nekoso_ul`
+            );
+
+            /* Announce on Discord */
+            luciaClient.channels.cache
+                .get(nekosoulDiscordChannel)
+                .send(
+                    `**Soul-chan just went live!**\nLet's go visit the stream!\nhttps://twitch.tv/nekoso_ul`
+                );
+        });
     } catch (error) {
         throw luciaError();
     }
@@ -134,6 +149,9 @@ async function createListener(token) {
             });
 
             isStreaming = false;
+        });
+        streamListener.onStreamOffline(nekosoulUserID, () => {
+            console.log("[" + Date() + "] Soul-chan just went offline.");
         });
     } catch {
         throw luciaError();

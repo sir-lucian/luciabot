@@ -1,6 +1,6 @@
 {
   "name": "luciabot",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "LuciaBot on Discord",
   "main": "index.js",
   "scripts": {
