@@ -7,12 +7,8 @@ const { EventSubWsListener } = require("@twurple/eventsub-ws");
 const { announceOnDiscord, luciaOnline, luciaError } = require("./src/app-discord");
 const { getTimestamps } = require("./src/app-common-lib");
 
-
-
 let tokens_json = null;
 let stream_listeners = null;
-
-let isStreaming = false;
 
 const lucialatte_app = new Client({
     intents: [

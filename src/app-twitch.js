@@ -3,8 +3,8 @@ require("dotenv").config();
 const { StaticAuthProvider } = require("@twurple/auth");
 const { ApiClient } = require("@twurple/api");
 const { EventSubWsListener } = require("@twurple/eventsub-ws");
-const { getTimestamps } = require("./app-common-lib");
-const { announceOnDiscord } = require("./app-discord");
+const { getTimestamps, setStreaming } = require("./app-common-lib");
+const { announceOnDiscord, logLucia, setLuciaPresence } = require("./app-discord");
 
 const ttv_id_lucian = process.env.TWITCH_USER_ID;
 const ttv_id_nekosoul = process.env.NEKOSOUL_USER_ID;
@@ -34,53 +34,44 @@ export async function isTwitchTokenValid(token) {
 }
 
 /* Initialize Listeners */
-export async function createListener(lucia, token) {
+export async function createListener(token) {
     let authProvider = new StaticAuthProvider(ttv_app_lucia_id, token);
     let apiClient = new ApiClient({ authProvider });
     stream_listeners = new EventSubWsListener({ apiClient });
     stream_listeners.start();
 
-    console.log(`${lucia.user.username} is listening!`);
+    logLucia('Lucia is listening!');
 
     try {
-        stream_listeners.onStreamOnline(ttv_id_lucian, (lucia) => {
-            console.log(`[${getTimestamps()}] Lucian nii-san just went live!: https://twitch.tv/stlucian`);
-
-            announceOnDiscord(lucia, dc_alert_lucian, stream_alert_lucian, true)
-
-            /* Announce on Discord */
-            lucia.channels.cache.get(dc_alert_lucian).send(stream_alert_lucian);
-
-            lucia.user.setPresence({
-                activities: [
-                    {
-                        name: "Lucian nii-san's penthouse",
-                        type: ActivityType.Streaming,
-                        url: `https://twitch.tv/stlucian`,
-                    },
-                ],
-                status: "online",
-            });
-
-            isStreaming = true;
+        stream_listeners.onStreamOnline(ttv_id_lucian, () => {
+            announceOnDiscord(dc_alert_lucian, stream_alert_lucian, true);
+            logLucia(stream_alert_lucian);
+            setLuciaPresence('streaming');
+            setStreaming(true);
         });
-        stream_listeners.onStreamOnline(ttv_id_nekosoul, () => {
-            console.log(
-                `[${Date()}] Soul-chan just went live!: https://twitch.tv/nekoso_ul`
-            );
 
-            /* Announce on Discord */
-            lucia.channels.cache
-                .get(dc_alert_nekosoul)
-                .send(
-                    `**Soul-chan just went live!**\nLet's go visit the rabbit house! <:nekoso4LoveUSoull:1238163343605366906>\nhttps://twitch.tv/nekoso_ul`
-                );
+        stream_listeners.onStreamOnline(ttv_id_nekosoul, () => {
+            announceOnDiscord(dc_alert_nekosoul, stream_alert_nekosoul, false);
+            logLucia(stream_alert_nekosoul);
         });
     } catch (error) {
         throw luciaError(lucia);
     }
 
     try {
+
+        stream_listeners.onStreamOnline(ttv_id_lucian, () => {
+            announceOnDiscord(dc_alert_lucian, 'Lucian nii-san just went offline.', true);
+            logLucia(stream_alert_lucian);
+            setLuciaPresence('streaming');
+            setStreaming(true);
+        });
+
+        stream_listeners.onStreamOnline(ttv_id_nekosoul, () => {
+            announceOnDiscord(dc_alert_nekosoul, stream_alert_nekosoul, false);
+            logLucia(stream_alert_nekosoul);
+        });
+
         stream_listeners.onStreamOffline(ttv_id_lucian, () => {
             console.log("[" + Date() + "] Lucian nii-san just went offline.");
             lucialatte_app.user.setPresence({
