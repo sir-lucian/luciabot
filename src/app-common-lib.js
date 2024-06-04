@@ -1,31 +1,61 @@
-const fs = require("node:fs");
 const path = require("node:path");
+const { getLucia, luciaError, luciaLog } = require("./app-discord");
 
-let isStreaming = false;
+const fs = require("node:fs");
 
-let tokensData = null;
-
-export async function getTimestamps() {
-    const time = new Date();
-    return time.toLocaleString();
+async function readTokensFromFile() {
+    let tokensData = null;
+    try {
+        fs.readFile("../json/tokens.json", (error, data) => {
+            if (error) {
+                luciaLog(error);
+                throw luciaError();
+            }
+            tokensData = JSON.parse(data);
+            luciaLog('Read tokens.json successfully!');
+        });
+        return tokensData;
+    } catch (error) {
+        luciaLog(error);
+        throw luciaError();
+    }
 }
 
-export async function getStreaming() {
-    return isStreaming;
+function writeTokensToFile(tokensData) {
+    try {
+        fs.writeFile("../json/tokens.json", JSON.stringify(tokensData), (error) => {
+            if (error) {
+                luciaLog(error);
+                throw luciaError();
+            }
+            luciaLog('Save tokens.json successfully!');
+        });
+    } catch (error) {
+        luciaLog(error);
+        throw luciaError();
+    }
 }
 
-export async function setStreaming(bool) {
-    isStreaming = bool;
-}
+function readCommands() {
+    const commandsPath = "../commands";
+    const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
 
-export async function readTokensFromFile(lucia) {
-    fs.readFile("tokens.json", (error, data) => {
-        if (error) {
-            console.error(error);
-            throw luciaError();
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+        const lucia = getLucia();
+        // Set a new item in the Collection with the key as the command name and the value as the exported module
+        if ("data" in command && "execute" in command) {
+            lucia.commands.set(command.data.name, command);
+            luciaLog(`${command} read!`);
+        } else {
+            luciaLog(`The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
-        tokensData = JSON.parse(data);
-        console.log("[ReadFile] Read tokens.json successfully!");
-    });
+    }
 }
-/* Read Tokens from JSON */
+
+module.exports = {
+    readTokensFromFile,
+    writeTokensToFile,
+    readCommands,
+}
