@@ -347,7 +347,7 @@ async function initializeSequence() {
 
 /* ---- APP STARTS HERE ---- */
 
-luciaStart();
+await luciaStart();
 
 lucia.on("ready", async () => {
     luciaLog('Lucia is being initialized...');
