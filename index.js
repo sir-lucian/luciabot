@@ -11,17 +11,17 @@ const ttv_app_id = process.env.TWITCH_CLIENT_ID;
 const ttv_app_secret = process.env.TWITCH_CLIENT_SECRET;
 
 /* TWITCH USERS */
-const ttv_id_lucian = process.env.TWITCH_USER_ID;
-const ttv_id_nekosoul = process.env.NEKOSOUL_USER_ID;
+const ttv_id_lucian = process.env.TTV_STLUCIAN_ID;
+const ttv_id_nekosoul = process.env.TTV_NEKOSOUL_ID;
 
 /* DISCORD APP TOKENS */
 const dc_app_lucia_token = process.env.DC_APP_TOKEN;
-// const dc_app_lucia_id = process.env.DC_APP_ID;
-const dc_app_lucia_log = process.env.DC_CHANNEL_ID_LUCIALOG;
+/* const dc_app_lucia_id = process.env.DC_APP_ID; */
+const dc_app_lucia_log = process.env.DC_CHANNEL_LUCIALOG;
 
 /* DISCORD STREAM ALERT CHANNELS */
-const dc_alert_lucian = process.env.DC_CHANNEL_ID_STLUCIAN;
-const dc_alert_nekosoul = process.env.DC_CHANNEL_ID_NEKOSOUL;
+const dc_alert_lucian = process.env.DC_CHANNEL_STLUCIAN;
+const dc_alert_nekosoul = process.env.DC_CHANNEL_NEKOSOUL;
 
 /* ALERT MESSAGES */
 const msg_lucian = `**Lucian nii-san just went live!**\nLet's go visit the penthouse! <a:LuciaCaughtIn4K:1214998758295601232>\nhttps://twitch.tv/stlucian`;
@@ -31,35 +31,32 @@ const lucia = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
         IntentsBitField.Flags.GuildMembers,
-        IntentsBitField.Flags.GuildMessages, 
+        IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
         GatewayIntentBits.Guilds
-    ]
+    ],
 });
 
 let isStreaming = false;
-let tokens = readTokensFromFile();
+let tokens = null;
 let listeners = null;
 
-async function readTokensFromFile() {
-    let tokensData = null;
-    try {
-        fs.readFile("tokens.json", (error, data) => {
-            if (error) {
-                luciaLog(error);
-                throw luciaError();
-            }
-            tokensData = JSON.parse(data);
-            luciaLog('Read tokens.json successfully!');
-        });
-        return tokensData;
-    } catch (error) {
-        luciaLog(error);
-        throw luciaError();
-    }
+let listeners_lucian = [];
+let listeners_nekosoul = [];
+
+try {
+    fs.readFile("tokens.json", async (error, data) => {
+        if (error) {
+            throw console.error(error);
+        }
+        tokens = await JSON.parse(data);
+        console.log('Read tokens.json successfully!');
+    });
+} catch (error) {
+    throw console.error('Read Tokens from file failed');
 }
 
-async function writeTokensToFile(tokensData) {
+function writeTokensToFile(tokensData) {
     try {
         fs.writeFile("tokens.json", JSON.stringify(tokensData), (error) => {
             if (error) {
@@ -74,32 +71,60 @@ async function writeTokensToFile(tokensData) {
     }
 }
 
-function readCommands() {
-    const commandsPath = "/commands";
+function initCommands() {
+    lucia.commands = new Collection();
+    const commandsPath = path.join(__dirname, 'commands');
     const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
 
     for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-        const lucia = getLucia();
-        // Set a new item in the Collection with the key as the command name and the value as the exported module
-        if ("data" in command && "execute" in command) {
-            lucia.commands.set(command.data.name, command);
-            luciaLog(`${command} read!`);
-        } else {
-            luciaLog(`The command at ${filePath} is missing a required "data" or "execute" property.`);
-        }
+	    const filePath = path.join(commandsPath, file);
+	    const command = require(filePath);
+	    // Set a new item in the Collection with the key as the command name and the value as the exported module
+	    if ('data' in command && 'execute' in command) {
+		    lucia.commands.set(command.data.name, command);
+	    } else {
+		    console.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+	    }
     }
+
+    lucia.on(Events.InteractionCreate, async (interaction) => {
+        const command = await interaction.client.commands.get(interaction.commandName);
+        if (!command) {
+            luciaLog('No command matching '+interaction.commandName+' was found.');
+            return;
+        }
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({
+                    content: "There was an error while executing this command!",
+                    ephemeral: true,
+                });
+            } else {
+                await interaction.reply({
+                    content: "There was an error while executing this command!",
+                    ephemeral: true,
+                });
+            }
+        }
+    });
 }
 
 function luciaLog(msg) {
     lucia.channels.cache.get(dc_app_lucia_log).send(msg);
 }
 
-async function luciaStart() {
+async function luciaLogin() {
     await lucia.login(dc_app_lucia_token);
+    return 'Lucia is now online on Discord!';
+}
+
+async function luciaStart() {
+    const msg = await luciaLogin();
     setLuciaPresence('standby');
-    luciaLog('Lucia is now online on Discord!');
+    console.log(msg);
 }
 
 function luciaError() {
@@ -170,33 +195,6 @@ function setLuciaPresence(status = 'error') {
     }
 }
 
-async function initCommands() {
-    lucia.commands = new Collection();
-    lucia.on(Events.InteractionCreate, async (interaction) => {
-        const command = await interaction.client.commands.get(interaction.commandName);
-        if (!command) {
-            luciaLog(`No command matching ${interaction.commandName} was found.`);
-            return;
-        }
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            console.error(error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({
-                    content: "There was an error while executing this command!",
-                    ephemeral: true,
-                });
-            } else {
-                await interaction.reply({
-                    content: "There was an error while executing this command!",
-                    ephemeral: true,
-                });
-            }
-        }
-    });
-}
-
 function getTwitchID(username) {
     switch (username) {
         case 'stlucian':
@@ -218,7 +216,8 @@ async function isTwitchTokenValid(access_token) {
         redirect: "follow",
     });
     let valid = response.status === 200 ? true : false;
-    luciaLog(`ValidatedToken = ${valid}`);
+    luciaLog('**[Get]** ValidatedToken');
+    luciaLog(valid.toString());
     return valid;
 }
 
@@ -229,21 +228,23 @@ async function createListener(access_token) {
     listeners = new EventSubWsListener({ apiClient });
     listeners.start();
 
-    logLucia('Lucia is listening!');
+    luciaLog('Lucia is listening!');
 
     /* STREAM START */
     try {
-        listeners.onStreamOnline(ttv_id_lucian, () => {
+        listeners_lucian[0] = listeners.onStreamOnline(ttv_id_lucian, () => {
             announceOnDiscord(ttv_id_lucian);
-            logLucia('StLucian started streaming');
+            luciaLog('StLucian started streaming');
             setLuciaPresence('streaming');
             isStreaming = true;
         });
+        luciaLog(`**[Created]** StLucian's online listener`);
 
-        listeners.onStreamOnline(ttv_id_nekosoul, () => {
+        listeners_nekosoul[0] = listeners.onStreamOnline(ttv_id_nekosoul, () => {
             announceOnDiscord(ttv_id_nekosoul);
-            logLucia('NeKoSo_UL started streaming');
+            luciaLog('NeKoSo_UL started streaming');
         });
+        luciaLog(`**[Created]** NeKoSo_UL's online listener`);
     } catch (error) {
         luciaLog(error);
         throw luciaError();
@@ -251,26 +252,26 @@ async function createListener(access_token) {
 
     /* STREAM STOP */
     try {
-        listeners.onStreamOnline(ttv_id_lucian, () => {
-            logLucia('StLucian went offline');
+        listeners_lucian[1] = listeners.onStreamOffline(ttv_id_lucian, () => {
+            luciaLog('StLucian went offline');
             setLuciaPresence('standby');
             isStreaming = false;
         });
+        luciaLog(`**[Created]** StLucian's offline listener`);
 
-        listeners.onStreamOnline(ttv_id_nekosoul, () => {
+        listeners_nekosoul[1] = listeners.onStreamOffline(ttv_id_nekosoul, () => {
             announceOnDiscord(dc_alert_nekosoul);
-            logLucia('NeKoSo_UL went offline');
+            luciaLog('NeKoSo_UL went offline');
         });
+        luciaLog(`**[Created]** NeKoSo_UL's offline listener`);
     } catch (error) {
         luciaLog(error);
         throw luciaError();
     }
-
-    return stream_listeners;
 }
 
 async function refreshToken(tokensData) {
-    luciaLog('Renewing Access Token');
+    luciaLog('Renewing Access Token...');
     setLuciaPresence('busy');
 
     let headers = new Headers();
@@ -293,7 +294,9 @@ async function refreshToken(tokensData) {
     const newAccessToken = response_json.access_token;
     const newRefreshToken = response_json.refresh_token;
 
+    luciaLog('**[Get]** Access Token');
     luciaLog(`${newAccessToken ? true : false}`);
+    luciaLog('**[Get]** Refresh Token');
     luciaLog(`${newRefreshToken ? true : false}`);
 
     if (!newAccessToken || !newRefreshToken) {
@@ -306,7 +309,7 @@ async function refreshToken(tokensData) {
         };
 
         try {
-            await writeTokensToFile(tokens);
+            writeTokensToFile(tokens);
         } catch (error) {
             luciaLog(error);
             throw luciaError();
@@ -324,20 +327,36 @@ async function refreshToken(tokensData) {
 
 /* Auto cycle */
 async function performMaintenance() {
-    await listeners.stop();
-    listeners.removeListener();
-    luciaLog('Stopping Listeners');
+    try {
+        await listeners_lucian[0].stop();
+        luciaLog(`**[Stopped]** StLucian's online listener`);
+        await listeners_lucian[1].stop();
+        luciaLog(`**[Stopped]** StLucian's offline listener`);
+        await listeners_nekosoul[0].stop();
+        luciaLog(`**[Stopped]** NeKoSo_UL's online listener`);
+        await listeners_nekosoul[1].stop();
+        luciaLog(`**[Stopped]** NeKoSo_UL's offline listener`);
+        await listeners.stop();
+        luciaLog(`**[Stopped]** All listeners`);
+        listeners.removeListener();
+        luciaLog('Deleted Listeners');
+    } catch (error) {
+        luciaLog(error);
+        throw luciaError();
+    }
+    
 
     tokens = await refreshToken();
-    listeners = await createListener(tokens.access_token);
-    luciaLog('Resuming Listeners');
+    await createListener(tokens.access_token);
+    luciaLog('Resuming Listeners...');
+    luciaLog(`**[Maintenance]** Ended`);
 }
 
 /* First Time Run */
 async function initializeSequence() {
     const response = await refreshToken(tokens);
     if (await isTwitchTokenValid(response.access_token)) {
-        listeners = await createListener(response.access_token);
+        createListener(response.access_token);
     } else {
         luciaLog('Initializing Failed');
         throw luciaError();
@@ -347,14 +366,13 @@ async function initializeSequence() {
 
 /* ---- APP STARTS HERE ---- */
 
-await luciaStart();
-
+luciaStart();
 lucia.on("ready", async () => {
-    luciaLog('Lucia is being initialized...');
-    tokens = await initializeSequence();
-    readCommands();
+    luciaLog('**Lucia** is being initialized...');
+    await initializeSequence();
     initCommands();
     setInterval(() => {
+        luciaLog(`**[Maintenance]** Starting...`);
         performMaintenance();
     }, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
 });

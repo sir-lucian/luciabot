@@ -3,9 +3,8 @@ require("dotenv").config();
 const fs = require('node:fs');
 const path = require('node:path');
 
-const discordClientId = process.env.DISCORD_CLIENT_ID;
-const discordGuildId = process.env.DISCORD_SERVER_ID;
-const discordToken = process.env.DISCORD_TOKEN;
+const discordClientId = process.env.DC_APP_ID;
+const discordToken = process.env.DC_APP_TOKEN;
 
 const commands = [];
 // Grab all the command files from the commands directory you created earlier
