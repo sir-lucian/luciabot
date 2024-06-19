@@ -127,9 +127,9 @@ async function luciaStart() {
     console.log(msg);
 }
 
-function luciaError() {
+function luciaError(error = 'Lucia is now confused!') {
     setLuciaPresence();
-    luciaLog('Lucia is now confused!');
+    luciaLog(error);
 }
 
 function announceOnDiscord(twitchID = null) {
@@ -246,8 +246,7 @@ async function createListener(access_token) {
         });
         luciaLog(`**[Created]** NeKoSo_UL's online listener`);
     } catch (error) {
-        luciaLog(error);
-        throw luciaError();
+        throw new luciaError(error);
     }
 
     /* STREAM STOP */
@@ -265,8 +264,7 @@ async function createListener(access_token) {
         });
         luciaLog(`**[Created]** NeKoSo_UL's offline listener`);
     } catch (error) {
-        luciaLog(error);
-        throw luciaError();
+        throw new luciaError(error);
     }
 }
 
@@ -300,7 +298,7 @@ async function refreshToken(tokensData) {
     luciaLog(`${newRefreshToken ? true : false}`);
 
     if (!newAccessToken || !newRefreshToken) {
-        throw new luciaError();
+        throw new luciaError(`**[Error]** No Tokens!`);
     } else {
         const tokens = {
             access_token: newAccessToken,
@@ -311,8 +309,7 @@ async function refreshToken(tokensData) {
         try {
             writeTokensToFile(tokens);
         } catch (error) {
-            luciaLog(error);
-            throw luciaError();
+            throw new luciaError(error);
         }
 
         if (isStreaming) {
@@ -327,6 +324,8 @@ async function refreshToken(tokensData) {
 
 /* Auto cycle */
 async function performMaintenance() {
+    luciaLog(`**[Maintenance]** Starting...`);
+
     try {
         await listeners_lucian[0].stop();
         luciaLog(`**[Stopped]** StLucian's online listener`);
@@ -341,12 +340,10 @@ async function performMaintenance() {
         listeners.removeListener();
         luciaLog('Deleted Listeners');
     } catch (error) {
-        luciaLog(error);
-        throw luciaError();
+        throw new luciaError(error);
     }
     
-
-    tokens = await refreshToken();
+    tokens = await refreshToken(tokens);
     await createListener(tokens.access_token);
     luciaLog('Resuming Listeners...');
     luciaLog(`**[Maintenance]** Ended`);
@@ -358,8 +355,7 @@ async function initializeSequence() {
     if (await isTwitchTokenValid(response.access_token)) {
         createListener(response.access_token);
     } else {
-        luciaLog('Initializing Failed');
-        throw luciaError();
+        throw new luciaError(`Initializing Failed`);
     }
     return response;
 }
@@ -369,10 +365,7 @@ async function initializeSequence() {
 luciaStart();
 lucia.on("ready", async () => {
     luciaLog('**Lucia** is being initialized...');
-    await initializeSequence();
+    tokens = await initializeSequence();
     initCommands();
-    setInterval(() => {
-        luciaLog(`**[Maintenance]** Starting...`);
-        performMaintenance();
-    }, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
+    setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
 });
