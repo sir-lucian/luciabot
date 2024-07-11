@@ -10,10 +10,10 @@ module.exports = {
                 .setDescription('Specify which type of food you want to eat.')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'rice', value: '0' },
-                    { name: 'noodles', value: '1' },
-                    { name: 'soup', value: '2' },
-                    { name: 'others', value: '3' },))
+                    { name: 'rice', value: 'rice' },
+                    { name: 'noodles', value: 'noodle' },
+                    { name: 'soup', value: 'soup' },
+                    { name: 'others', value: 'others' },))
         .addStringOption(option =>
             option
                 .setName('halal')
@@ -23,65 +23,33 @@ module.exports = {
                     { name: 'yes', value: 'yes' },
                     { name: 'no', value: 'no' },)),
     async execute(interaction) {
-        const response = await fetch("https://lucian.solutions/files/foodmenu.json");
-        const foodmenu = await response.json();
-        const options = interaction.options.getString('category') ?? Math.floor(Math.random() * 4).toString();
-        const halal = interaction.options.getString('halal') ?? 'no';
+        const category = interaction.options.getString('category') ?? null;
+        const halal = interaction.options.getString('halal') === 'yes' ? 'halal' : null;
 
-        async function randomMenu(options) {
-            let reply = "";
-            switch (options) {
-                case '0': // Rice
-                    reply += "ข้าว";
-                    switch (Math.floor(Math.random() * 3)) {
-                        case 0: // Wok Station
-                            switch (Math.floor(Math.random() * 2)) { // Prefix or Suffix
-                                case 0: // With Prefix
-                                    reply += foodmenu.rice.wokstation.prefix[Math.floor(Math.random() * foodmenu.rice.wokstation.prefix.length)];
-                                    reply += foodmenu.rice.wokstation.meat[Math.floor(Math.random() * foodmenu.rice.wokstation.meat.length)];
-                                    break;
-                                case 1: // With Suffix
-                                default:
-                                    reply += foodmenu.rice.wokstation.meat[Math.floor(Math.random() * foodmenu.rice.wokstation.meat.length)];
-                                    reply += foodmenu.rice.wokstation.suffix[Math.floor(Math.random() * foodmenu.rice.wokstation.suffix.length)];
-                            }
-                            reply += foodmenu.rice.wokstation.toppings[Math.floor(Math.random() * foodmenu.rice.wokstation.toppings.length)];
-                            break;
-                        case 1: // Eggs
-                            reply += foodmenu.rice.eggs.method[Math.floor(Math.random() * foodmenu.rice.eggs.method.length)];
-                            reply += foodmenu.rice.eggs.meat[Math.floor(Math.random() * foodmenu.rice.eggs.meat.length)];
-                            break;
-                        case 2: // Others
-                        default:
-                            reply += foodmenu.rice.others[Math.floor(Math.random() * foodmenu.rice.others.length)];
-                    }
-                    break;
-                case '1': // Noodles
-                    reply += "ก๋วยเตี๋ยว";
-                    switch (Math.floor(Math.random() * 2)) {
-                        case 0: // Type
-                            reply += foodmenu.noodles.type[Math.floor(Math.random() * foodmenu.noodles.type.length)];
-                            break;
-                        case 1: // Others
-                        default:
-                            reply = foodmenu.noodles.others[Math.floor(Math.random() * foodmenu.noodles.others.length)];
-                    }
-                    break;
-                case '2': // Soup
-                    reply += foodmenu.soup[Math.floor(Math.random() * foodmenu.soup.length)];
-                    break;
-                case '3': // Others
-                default:
-                    reply += foodmenu.others[Math.floor(Math.random() * foodmenu.others.length)];
-            }
-            if (reply.match(/(หมู)|(แฮม)|(เล้ง)|(ลาบ)|(น้ำตก)/g) && halal == 'yes') {
-                randomMenu(options);
-            } else {
-                return reply;
-            }
+        if (category && halal) {
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category+"&args2="+halal).then((response) => {
+                response.text().then((data) => {
+                    interaction.reply(data);
+                });
+            });
+        } else if (category && !halal) {
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category).then((response) => {
+                response.text().then((data) => {
+                    interaction.reply(data);
+                });
+            }); 
+        } else if (!category && halal) {
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+halal).then((response) => {
+                response.text().then((data) => {
+                    interaction.reply(data);
+                });
+            }); 
+        } else {
+            fetch("https://api.lucian.solutions/api.foodmenu.php").then((response) => {
+                response.text().then((data) => {
+                    interaction.reply(data);
+                });
+            });
         }
-        
-        const answer = await randomMenu(options);
-        interaction.reply(answer);
     }
 }

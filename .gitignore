@@ -1,5 +1,6 @@
 .env
 tokens.json
+test.js
 docker-compose.yml
 Dockerfile
 /node_modules
