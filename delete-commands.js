@@ -6,11 +6,11 @@ const discordToken = process.env.DC_APP_TOKEN;
 
 const rest = new REST().setToken(discordToken);
 
-async function clearAllCommands(rest, clientId, discordServerId) {
+async function clearAllCommands(rest, clientId) {
     // For guild-based commands
-    rest.put(Routes.applicationGuildCommands(clientId, discordServerId), { body: [] })
+    /*rest.put(Routes.applicationGuildCommands(clientId, discordServerId), { body: [] })
         .then(() => console.log("Successfully deleted all guild commands."))
-        .catch(console.error);
+        .catch(console.error);*/
 
     // For global commands
     rest.put(Routes.applicationCommands(clientId), { body: [] })

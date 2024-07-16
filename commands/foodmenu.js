@@ -25,31 +25,46 @@ module.exports = {
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
         const halal = interaction.options.getString('halal') === 'yes' ? 'halal' : null;
-
         if (category && halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category+"&args2="+halal).then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            });
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category+"&args2="+halal).then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         } else if (category && !halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category).then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            }); 
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category).then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         } else if (!category && halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+halal).then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            }); 
+            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+halal).then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         } else {
-            fetch("https://api.lucian.solutions/api.foodmenu.php").then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            });
+            fetch("https://api.lucian.solutions/api.foodmenu.php").then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         }
     }
 }

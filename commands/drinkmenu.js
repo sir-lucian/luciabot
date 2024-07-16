@@ -19,17 +19,25 @@ module.exports = {
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
         if (category) {
-            fetch("https://api.lucian.solutions/api.drinksmenu.php?args1="+category).then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            });
+            fetch("https://api.lucian.solutions/api.drinksmenu.php?args1="+category).then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         } else {
-            fetch("https://api.lucian.solutions/api.drinksmenu.php").then((response) => {
-                response.text().then((data) => {
-                    interaction.reply(data);
-                });
-            });
+            fetch("https://api.lucian.solutions/api.drinksmenu.php").then(
+                response => {
+                    response.text().then(
+                        answer => {
+                            interaction.reply(answer);
+                        }
+                    );
+                }
+            );
         }
     }
 }
