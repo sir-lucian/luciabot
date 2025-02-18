@@ -25,7 +25,7 @@ const dc_alert_nekosoul = process.env.DC_CHANNEL_NEKOSOUL;
 
 /* ALERT MESSAGES */
 const msg_lucian = `**Lucian nii-san just went live!**\nLet's go visit the penthouse! <a:LuciaCaughtIn4K:1214998758295601232>\nhttps://twitch.tv/stlucian`;
-const msg_nekosoul = `**Soul-chan just went live!**\nLet's go visit the rabbit house! <:nekoso4LoveUSoull:1238163343605366906>\nhttps://twitch.tv/nekoso_ul`;
+const msg_nekosoul = `**Soul-chan just went live!**\nLet's go visit the rabbit house! :heart:\nhttps://twitch.tv/nekoso_ul`;
 
 const lucia = new Client({
     intents: [
@@ -38,38 +38,14 @@ const lucia = new Client({
 });
 
 let isStreaming = false;
-let tokens = null;
+let tokens = {
+    access_token: undefined,
+    refresh_token: process.env.TWITCH_REFRESH_TOKEN
+};
 let listeners = null;
 
 let listeners_lucian = [];
 let listeners_nekosoul = [];
-
-try {
-    fs.readFile("tokens.json", async (error, data) => {
-        if (error) {
-            throw console.error(error);
-        }
-        tokens = await JSON.parse(data);
-        console.log('Read tokens.json successfully!');
-    });
-} catch (error) {
-    throw console.error('Read Tokens from file failed');
-}
-
-function writeTokensToFile(tokensData) {
-    try {
-        fs.writeFile("tokens.json", JSON.stringify(tokensData), (error) => {
-            if (error) {
-                luciaLog(error);
-                throw luciaError();
-            }
-            luciaLog('Save tokens.json successfully!');
-        });
-    } catch (error) {
-        luciaLog(error);
-        throw luciaError();
-    }
-}
 
 function initCommands() {
     lucia.commands = new Collection();
@@ -124,7 +100,7 @@ async function luciaLogin() {
 async function luciaStart() {
     const msg = await luciaLogin();
     setLuciaPresence('standby');
-    console.log(msg);
+    return msg ? true : false;
 }
 
 function luciaError(error = 'Lucia is now confused!') {
@@ -303,14 +279,7 @@ async function refreshToken(tokensData) {
         const tokens = {
             access_token: newAccessToken,
             refresh_token: newRefreshToken,
-            last_updated: Date(),
         };
-
-        try {
-            writeTokensToFile(tokens);
-        } catch (error) {
-            throw new luciaError(error);
-        }
 
         if (isStreaming) {
             setLuciaPresence('streaming');
@@ -362,10 +331,12 @@ async function initializeSequence() {
 
 /* ---- APP STARTS HERE ---- */
 
-luciaStart();
-lucia.on("ready", async () => {
-    luciaLog('**Lucia** is being initialized...');
-    tokens = await initializeSequence();
-    initCommands();
-    setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
-});
+const startSuccess = luciaStart();
+if (startSuccess) {
+    lucia.on("ready", async () => {
+        luciaLog('**Lucia** is being initialized...');
+        tokens = await initializeSequence();
+        initCommands();
+        setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
+    });
+}
