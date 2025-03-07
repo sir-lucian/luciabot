@@ -25,46 +25,25 @@ module.exports = {
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
         const halal = interaction.options.getString('halal') === 'yes' ? 'halal' : null;
+        let fetchUrl = "https://api.lucian.solutions/api.foodmenu.php";
         if (category && halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category+"&args2="+halal).then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
+            fetchUrl += "?args1="+category+"&args2="+halal;
         } else if (category && !halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+category).then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
+            fetchUrl += "?args1="+category;
         } else if (!category && halal) {
-            fetch("https://api.lucian.solutions/api.foodmenu.php?args1="+halal).then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
-        } else {
-            fetch("https://api.lucian.solutions/api.foodmenu.php").then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
+            fetchUrl += "?args1="+halal;
         }
+        try {
+            const response = await fetch(fetchUrl);
+            const answer = await response.text();
+            await interaction.reply(answer);
+        } catch (e) {
+            console.error(e);
+            await interaction.reply({
+                content: "Failed to fetch data from API.",
+                ephemeral: true,
+            });
+        }
+        
     }
 }

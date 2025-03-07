@@ -18,26 +18,20 @@ module.exports = {
                     { name: 'partymode', value: 'partymode' },)),
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
+        let fetchUrl = "https://api.lucian.solutions/api.drinksmenu.php";
         if (category) {
-            fetch("https://api.lucian.solutions/api.drinksmenu.php?args1="+category).then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
-        } else {
-            fetch("https://api.lucian.solutions/api.drinksmenu.php").then(
-                response => {
-                    response.text().then(
-                        answer => {
-                            interaction.reply(answer);
-                        }
-                    );
-                }
-            );
+            fetchUrl += "?args1="+category;
+        }
+        try {
+            const response = await fetch(fetchUrl);
+            const answer = await response.text();
+            await interaction.reply(answer);
+        } catch (e) {
+            console.error(e);
+            await interaction.reply({
+                content: "Failed to fetch data from API.",
+                ephemeral: true,
+            });
         }
     }
 }
