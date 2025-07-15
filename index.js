@@ -30,6 +30,7 @@ const dc_app_lucia_token = process.env.DC_APP_TOKEN;
 /* const dc_app_lucia_id = process.env.DC_APP_ID; */
 const dc_app_lucia_log = process.env.DC_CHANNEL_LUCIALOG;
 const dc_app_guild_id = process.env.DC_APP_GUILD_ID;
+const welcome_channel_id = process.env.DC_CHANNEL_WELCOME;
 const dc_app_library_of_babel = process.env.DC_CHANNEL_LIBRARY_OF_BABEL;
 
 /* DISCORD STREAM ALERT CHANNELS */
@@ -355,6 +356,39 @@ async function initializeSequence() {
 
 /* React Roles */
 
+async function initServerJoin() {
+    const server = await lucia.channels.fetch(welcome_channel_id);
+    if (!server) {
+        luciaLog(`Channel not found: ${welcome_channel_id}`);
+        return;
+    }
+
+    const messages = await server.messages.fetch({ limit: 100 });
+    const botMessages = messages.filter(
+        (msg) => msg.author.id === lucia.user.id
+    );
+
+    const firstMessage = botMessages.first();
+    const buttons = [
+        new ButtonBuilder()
+            .setCustomId("join-server")
+            .setLabel("Join Server")
+            .setEmoji("👋")
+            .setStyle(ButtonStyle.Success),
+    ];
+
+    const messageObject = {
+        content: "**Welcome to**\n# La résidence de Lucian\n- Click the button below to join.",
+        components: buttonWrapper(buttons),
+    };
+
+    if (firstMessage) {
+        firstMessage.edit(messageObject);
+    } else {
+        server.send(messageObject);
+    }
+}
+
 async function initRoleSelector() {
     const libraryOfBabel = await lucia.channels.fetch(dc_app_library_of_babel);
     if (!libraryOfBabel) {
@@ -490,6 +524,7 @@ if (startSuccess) {
         luciaLog("**Lucia** is being initialized...");
         tokens = await initializeSequence();
         initCommands();
+        await initServerJoin();
         await initRoleSelector();
         setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
     });
@@ -526,6 +561,9 @@ if (startSuccess) {
                     break;
                 case "wordle":
                     doCheckRole(userId, roles, "Wordle", interaction);
+                    break;
+                case "join-server":
+                    doCheckRole(userId, roles, "Visitor", interaction);
                     break;
                 default:
                     await interaction.reply({
