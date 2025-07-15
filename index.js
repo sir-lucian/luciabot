@@ -2,7 +2,17 @@ require("dotenv").config();
 const { StaticAuthProvider } = require("@twurple/auth");
 const { ApiClient } = require("@twurple/api");
 const { EventSubWsListener } = require("@twurple/eventsub-ws");
-const { ActivityType, Client, Collection, Events, GatewayIntentBits, IntentsBitField, MessageFlags, ButtonBuilder, ButtonStyle, } = require("discord.js");
+const {
+    ActivityType,
+    Client,
+    Collection,
+    Events,
+    GatewayIntentBits,
+    IntentsBitField,
+    MessageFlags,
+    ButtonBuilder,
+    ButtonStyle,
+} = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
 const buttonWrapper = require("./button-wrapper.js");
@@ -36,14 +46,14 @@ const lucia = new Client({
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
-        GatewayIntentBits.Guilds
+        GatewayIntentBits.Guilds,
     ],
 });
 
 let isStreaming = false;
 let tokens = {
     access_token: undefined,
-    refresh_token: process.env.TWITCH_REFRESH_TOKEN
+    refresh_token: process.env.TWITCH_REFRESH_TOKEN,
 };
 let listeners = null;
 
@@ -52,24 +62,29 @@ let listeners_nekosoul = [];
 
 function initCommands() {
     lucia.commands = new Collection();
-    const commandsPath = path.join(__dirname, 'commands');
-    const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
+    const commandsPath = path.join(__dirname, "commands");
+    const commandFiles = fs
+        .readdirSync(commandsPath)
+        .filter((file) => file.endsWith(".js"));
 
     for (const file of commandFiles) {
-	    const filePath = path.join(commandsPath, file);
-	    const command = require(filePath);
-	    // Set a new item in the Collection with the key as the command name and the value as the exported module
-	    if ('data' in command && 'execute' in command) {
-		    lucia.commands.set(command.data.name, command);
-	    } else {
-		    console.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-	    }
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+        // Set a new item in the Collection with the key as the command name and the value as the exported module
+        if ("data" in command && "execute" in command) {
+            lucia.commands.set(command.data.name, command);
+        } else {
+            console.warn(
+                `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+            );
+        }
     }
 
     lucia.on(Events.InteractionCreate, async (interaction) => {
-        const command = await interaction.client.commands.get(interaction.commandName);
+        const command = await interaction.client.commands.get(
+            interaction.commandName
+        );
         if (!command) {
-            luciaLog('No command matching '+interaction.commandName+' was found.');
             return;
         }
         try {
@@ -97,36 +112,36 @@ function luciaLog(msg) {
 
 async function luciaLogin() {
     await lucia.login(dc_app_lucia_token);
-    return 'Lucia is now online on Discord!';
+    return "Lucia is now online on Discord!";
 }
 
 async function luciaStart() {
     const msg = await luciaLogin();
-    setLuciaPresence('standby');
+    setLuciaPresence("standby");
     return msg ? true : false;
 }
 
-function luciaError(error = 'Lucia is now confused!') {
+function luciaError(error = "Lucia is now confused!") {
     setLuciaPresence();
     luciaLog(error);
 }
 
 function announceOnDiscord(twitchID = null) {
     switch (twitchID) {
-        case getTwitchID('stlucian'):
+        case getTwitchID("stlucian"):
             lucia.channels.cache.get(dc_alert_lucian).send(msg_lucian);
             break;
-        case getTwitchID('nekoso_ul'):
+        case getTwitchID("nekoso_ul"):
             lucia.channels.cache.get(dc_alert_nekosoul).send(msg_nekosoul);
             break;
         default:
-            luciaLog('Twitch user invalid, cannot annouce on Discord');
+            luciaLog("Twitch user invalid, cannot annouce on Discord");
     }
 }
 
-function setLuciaPresence(status = 'error') {
+function setLuciaPresence(status = "error") {
     switch (status) {
-        case 'standby':
+        case "standby":
             lucia.user.setPresence({
                 activities: [
                     {
@@ -137,7 +152,7 @@ function setLuciaPresence(status = 'error') {
                 status: "online",
             });
             break;
-        case 'streaming':
+        case "streaming":
             lucia.user.setPresence({
                 activities: [
                     {
@@ -149,7 +164,7 @@ function setLuciaPresence(status = 'error') {
                 status: "online",
             });
             break;
-        case 'busy':
+        case "busy":
             lucia.user.setPresence({
                 activities: [
                     {
@@ -160,7 +175,7 @@ function setLuciaPresence(status = 'error') {
                 status: "dnd",
             });
             break;
-        case 'error':
+        case "error":
         default:
             lucia.user.setPresence({
                 activities: [
@@ -176,9 +191,9 @@ function setLuciaPresence(status = 'error') {
 
 function getTwitchID(username) {
     switch (username) {
-        case 'stlucian':
+        case "stlucian":
             return ttv_id_lucian;
-        case 'nekoso_ul':
+        case "nekoso_ul":
             return ttv_id_nekosoul;
         default:
             return null;
@@ -195,7 +210,7 @@ async function isTwitchTokenValid(access_token) {
         redirect: "follow",
     });
     let valid = response.status === 200 ? true : false;
-    luciaLog('**[Get]** ValidatedToken');
+    luciaLog("**[Get]** ValidatedToken");
     luciaLog(valid.toString());
     return valid;
 }
@@ -207,22 +222,25 @@ async function createListener(access_token) {
     listeners = new EventSubWsListener({ apiClient });
     listeners.start();
 
-    luciaLog('Lucia is listening!');
+    luciaLog("Lucia is listening!");
 
     /* STREAM START */
     try {
         listeners_lucian[0] = listeners.onStreamOnline(ttv_id_lucian, () => {
             announceOnDiscord(ttv_id_lucian);
-            luciaLog('StLucian started streaming');
-            setLuciaPresence('streaming');
+            luciaLog("StLucian started streaming");
+            setLuciaPresence("streaming");
             isStreaming = true;
         });
         luciaLog(`**[Created]** StLucian's online listener`);
 
-        listeners_nekosoul[0] = listeners.onStreamOnline(ttv_id_nekosoul, () => {
-            announceOnDiscord(ttv_id_nekosoul);
-            luciaLog('NeKoSo_UL started streaming');
-        });
+        listeners_nekosoul[0] = listeners.onStreamOnline(
+            ttv_id_nekosoul,
+            () => {
+                announceOnDiscord(ttv_id_nekosoul);
+                luciaLog("NeKoSo_UL started streaming");
+            }
+        );
         luciaLog(`**[Created]** NeKoSo_UL's online listener`);
     } catch (error) {
         throw new luciaError(error);
@@ -231,16 +249,19 @@ async function createListener(access_token) {
     /* STREAM STOP */
     try {
         listeners_lucian[1] = listeners.onStreamOffline(ttv_id_lucian, () => {
-            luciaLog('StLucian went offline');
-            setLuciaPresence('standby');
+            luciaLog("StLucian went offline");
+            setLuciaPresence("standby");
             isStreaming = false;
         });
         luciaLog(`**[Created]** StLucian's offline listener`);
 
-        listeners_nekosoul[1] = listeners.onStreamOffline(ttv_id_nekosoul, () => {
-            announceOnDiscord(dc_alert_nekosoul);
-            luciaLog('NeKoSo_UL went offline');
-        });
+        listeners_nekosoul[1] = listeners.onStreamOffline(
+            ttv_id_nekosoul,
+            () => {
+                announceOnDiscord(dc_alert_nekosoul);
+                luciaLog("NeKoSo_UL went offline");
+            }
+        );
         luciaLog(`**[Created]** NeKoSo_UL's offline listener`);
     } catch (error) {
         throw new luciaError(error);
@@ -248,8 +269,8 @@ async function createListener(access_token) {
 }
 
 async function refreshToken(tokensData) {
-    luciaLog('Renewing Access Token...');
-    setLuciaPresence('busy');
+    luciaLog("Renewing Access Token...");
+    setLuciaPresence("busy");
 
     let headers = new Headers();
     headers.append(`Content-Type`, `application/json`);
@@ -271,9 +292,9 @@ async function refreshToken(tokensData) {
     const newAccessToken = response_json.access_token;
     const newRefreshToken = response_json.refresh_token;
 
-    luciaLog('**[Get]** Access Token');
+    luciaLog("**[Get]** Access Token");
     luciaLog(`${newAccessToken ? true : false}`);
-    luciaLog('**[Get]** Refresh Token');
+    luciaLog("**[Get]** Refresh Token");
     luciaLog(`${newRefreshToken ? true : false}`);
 
     if (!newAccessToken || !newRefreshToken) {
@@ -285,9 +306,9 @@ async function refreshToken(tokensData) {
         };
 
         if (isStreaming) {
-            setLuciaPresence('streaming');
+            setLuciaPresence("streaming");
         } else {
-            setLuciaPresence('standby');
+            setLuciaPresence("standby");
         }
 
         return tokens;
@@ -310,14 +331,14 @@ async function performMaintenance() {
         await listeners.stop();
         luciaLog(`**[Stopped]** All listeners`);
         listeners.removeListener();
-        luciaLog('Deleted Listeners');
+        luciaLog("Deleted Listeners");
     } catch (error) {
         throw new luciaError(error);
     }
-    
+
     tokens = await refreshToken(tokens);
     await createListener(tokens.access_token);
-    luciaLog('Resuming Listeners...');
+    luciaLog("Resuming Listeners...");
     luciaLog(`**[Maintenance]** Ended`);
 }
 
@@ -380,6 +401,11 @@ async function initRoleSelector() {
             .setEmoji("🎨")
             .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
+            .setCustomId("pokemon")
+            .setLabel("Pokémon")
+            .setEmoji("🐹")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
             .setCustomId("wordle")
             .setLabel("Wordle")
             .setEmoji("🧩")
@@ -387,7 +413,8 @@ async function initRoleSelector() {
     ];
 
     const messageObject = {
-        content: "# Select your interests\n - Click the button to access the room\n - Click the button again to leave",
+        content:
+            "# Select your interests\n - Click the button to access the room\n - Click the button again to leave",
         components: buttonWrapper(buttons),
     };
 
@@ -460,56 +487,59 @@ async function removeRole(userId, roleName) {
 const startSuccess = luciaStart();
 if (startSuccess) {
     lucia.on("ready", async () => {
-        luciaLog('**Lucia** is being initialized...');
+        luciaLog("**Lucia** is being initialized...");
         tokens = await initializeSequence();
         initCommands();
         await initRoleSelector();
         setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
     });
 
-    lucia.on("interactionCreate", async (interaction) => {
-            try {
-                if (!interaction.isButton()) return;
-    
-                const buttonId = interaction.customId ?? null;
-                const userId = interaction.user.id;
-                const roles = await getRoles(userId);
-    
-                switch (buttonId) {
-                    case "girls_frontline":
-                        doCheckRole(userId, roles, "Girls Frontline", interaction);
-                        break;
-                    case "blue_archive":
-                        doCheckRole(userId, roles, "Blue Archive", interaction);
-                        break;
-                    case "city_builders":
-                        doCheckRole(userId, roles, "City Builders", interaction);
-                        break;
-                    case "minecraft":
-                        doCheckRole(userId, roles, "Minecraft", interaction);
-                        break;
-                    case "music-rhythm":
-                        doCheckRole(userId, roles, "Rhythms", interaction);
-                        break;
-                    case "arts-photography":
-                        doCheckRole(userId, roles, "Museum Goers", interaction);
-                        break;
-                    case "wordle":
-                        doCheckRole(userId, roles, "Wordle", interaction);
-                        break;
-                    default:
-                        await interaction.reply({
-                            content: `You clicked the button with ID: ${interaction.customId}`,
-                            flags: MessageFlags.Ephemeral,
-                        });
-                }
-            } catch (error) {
-                console.error("Error handling interaction:", error);
-                luciaError(error.toString());
-                await interaction.reply({
-                    content: "An error occurred while processing your request.",
-                    flags: MessageFlags.Ephemeral,
-                });
+    lucia.on(Events.InteractionCreate, async (interaction) => {
+        try {
+            if (!interaction.isButton()) return;
+
+            const buttonId = interaction.customId ?? null;
+            const userId = interaction.user.id;
+            const roles = await getRoles(userId);
+
+            switch (buttonId) {
+                case "girls_frontline":
+                    doCheckRole(userId, roles, "Girls Frontline", interaction);
+                    break;
+                case "blue_archive":
+                    doCheckRole(userId, roles, "Blue Archive", interaction);
+                    break;
+                case "city_builders":
+                    doCheckRole(userId, roles, "City Builders", interaction);
+                    break;
+                case "minecraft":
+                    doCheckRole(userId, roles, "Minecraft", interaction);
+                    break;
+                case "music-rhythm":
+                    doCheckRole(userId, roles, "Rhythms", interaction);
+                    break;
+                case "arts-photography":
+                    doCheckRole(userId, roles, "Museum Goers", interaction);
+                    break;
+                case "pokemon":
+                    doCheckRole(userId, roles, "Pokemon", interaction);
+                    break;
+                case "wordle":
+                    doCheckRole(userId, roles, "Wordle", interaction);
+                    break;
+                default:
+                    await interaction.reply({
+                        content: `You clicked the button with ID: ${interaction.customId}`,
+                        flags: MessageFlags.Ephemeral,
+                    });
             }
-        });
+        } catch (error) {
+            console.error("Error handling interaction:", error);
+            luciaError(error.toString());
+            await interaction.reply({
+                content: "An error occurred while processing your request.",
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+    });
 }
