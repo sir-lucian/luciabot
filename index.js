@@ -2,9 +2,10 @@ require("dotenv").config();
 const { StaticAuthProvider } = require("@twurple/auth");
 const { ApiClient } = require("@twurple/api");
 const { EventSubWsListener } = require("@twurple/eventsub-ws");
-const { ActivityType, Client, Collection, Events, GatewayIntentBits, IntentsBitField, } = require("discord.js");
+const { ActivityType, Client, Collection, Events, GatewayIntentBits, IntentsBitField, MessageFlags, ButtonBuilder, ButtonStyle, } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
+const buttonWrapper = require("./button-wrapper.js");
 
 /* TWITCH APP TOKENS */
 const ttv_app_id = process.env.TWITCH_CLIENT_ID;
@@ -18,6 +19,8 @@ const ttv_id_nekosoul = process.env.TTV_NEKOSOUL_ID;
 const dc_app_lucia_token = process.env.DC_APP_TOKEN;
 /* const dc_app_lucia_id = process.env.DC_APP_ID; */
 const dc_app_lucia_log = process.env.DC_CHANNEL_LUCIALOG;
+const dc_app_guild_id = process.env.DC_APP_GUILD_ID;
+const dc_app_library_of_babel = process.env.DC_CHANNEL_LIBRARY_OF_BABEL;
 
 /* DISCORD STREAM ALERT CHANNELS */
 const dc_alert_lucian = process.env.DC_CHANNEL_STLUCIAN;
@@ -76,12 +79,12 @@ function initCommands() {
             if (interaction.replied || interaction.deferred) {
                 await interaction.followUp({
                     content: "There was an error while executing this command!",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             } else {
                 await interaction.reply({
                     content: "There was an error while executing this command!",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             }
         }
@@ -329,6 +332,129 @@ async function initializeSequence() {
     return response;
 }
 
+/* React Roles */
+
+async function initRoleSelector() {
+    const libraryOfBabel = await lucia.channels.fetch(dc_app_library_of_babel);
+    if (!libraryOfBabel) {
+        luciaLog(`Channel not found: ${dc_app_library_of_babel}`);
+        return;
+    }
+
+    const messages = await libraryOfBabel.messages.fetch({ limit: 100 });
+    const botMessages = messages.filter(
+        (msg) => msg.author.id === lucia.user.id
+    );
+
+    const firstMessage = botMessages.first();
+
+    const buttons = [
+        new ButtonBuilder()
+            .setCustomId("girls_frontline")
+            .setLabel("Girls Frontline")
+            .setEmoji("🎯")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("blue_archive")
+            .setLabel("Blue Archive")
+            .setEmoji("📘")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("city_builders")
+            .setLabel("City Builders")
+            .setEmoji("🏙️")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("minecraft")
+            .setLabel("Minecraft")
+            .setEmoji("⛏️")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("music-rhythm")
+            .setLabel("Music & Rhythm Games")
+            .setEmoji("🎵")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("arts-photography")
+            .setLabel("Arts & Photography")
+            .setEmoji("🎨")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("wordle")
+            .setLabel("Wordle")
+            .setEmoji("🧩")
+            .setStyle(ButtonStyle.Secondary),
+    ];
+
+    const messageObject = {
+        content: "# Select your interests\n - Click the button to access the room\n - Click the button again to leave",
+        components: buttonWrapper(buttons),
+    };
+
+    if (firstMessage) {
+        firstMessage.edit(messageObject);
+    } else {
+        libraryOfBabel.send(messageObject);
+    }
+}
+
+async function getRoles(userId) {
+    const member = await lucia.guilds.cache
+        .get(dc_app_guild_id)
+        ?.members.fetch(userId);
+    if (!member) return;
+
+    const roles = member.roles.cache.map((role) => role.name);
+    return roles;
+}
+
+async function doCheckRole(userId, roles, roleName, interaction) {
+    const tempInt = interaction ?? null;
+    if (roles && roles.includes(roleName)) {
+        await removeRole(userId, roleName);
+        if (tempInt) {
+            await tempInt.reply({
+                content: `You have been removed from the **${roleName}** room.`,
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+    } else {
+        await addRole(userId, roleName);
+        if (tempInt) {
+            await tempInt.reply({
+                content: `You have been added to the **${roleName}** room.`,
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+    }
+}
+
+async function addRole(userId, roleName) {
+    const guild = lucia.guilds.cache.get(dc_app_guild_id);
+    if (!guild) return;
+
+    const member = await guild.members.fetch(userId);
+    if (!member) return;
+
+    const role = guild.roles.cache.find((r) => r.name === roleName);
+    if (!role) return;
+
+    await member.roles.add(role);
+}
+
+async function removeRole(userId, roleName) {
+    const guild = lucia.guilds.cache.get(dc_app_guild_id);
+    if (!guild) return;
+
+    const member = await guild.members.fetch(userId);
+    if (!member) return;
+
+    const role = guild.roles.cache.find((r) => r.name === roleName);
+    if (!role) return;
+
+    await member.roles.remove(role);
+}
+
 /* ---- APP STARTS HERE ---- */
 
 const startSuccess = luciaStart();
@@ -337,6 +463,53 @@ if (startSuccess) {
         luciaLog('**Lucia** is being initialized...');
         tokens = await initializeSequence();
         initCommands();
+        await initRoleSelector();
         setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
     });
+
+    lucia.on("interactionCreate", async (interaction) => {
+            try {
+                if (!interaction.isButton()) return;
+    
+                const buttonId = interaction.customId ?? null;
+                const userId = interaction.user.id;
+                const roles = await getRoles(userId);
+    
+                switch (buttonId) {
+                    case "girls_frontline":
+                        doCheckRole(userId, roles, "Girls Frontline", interaction);
+                        break;
+                    case "blue_archive":
+                        doCheckRole(userId, roles, "Blue Archive", interaction);
+                        break;
+                    case "city_builders":
+                        doCheckRole(userId, roles, "City Builders", interaction);
+                        break;
+                    case "minecraft":
+                        doCheckRole(userId, roles, "Minecraft", interaction);
+                        break;
+                    case "music-rhythm":
+                        doCheckRole(userId, roles, "Rhythms", interaction);
+                        break;
+                    case "arts-photography":
+                        doCheckRole(userId, roles, "Museum Goers", interaction);
+                        break;
+                    case "wordle":
+                        doCheckRole(userId, roles, "Wordle", interaction);
+                        break;
+                    default:
+                        await interaction.reply({
+                            content: `You clicked the button with ID: ${interaction.customId}`,
+                            flags: MessageFlags.Ephemeral,
+                        });
+                }
+            } catch (error) {
+                console.error("Error handling interaction:", error);
+                luciaError(error.toString());
+                await interaction.reply({
+                    content: "An error occurred while processing your request.",
+                    flags: MessageFlags.Ephemeral,
+                });
+            }
+        });
 }
