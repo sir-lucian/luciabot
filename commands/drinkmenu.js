@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,7 +30,7 @@ module.exports = {
             console.error(e);
             await interaction.reply({
                 content: "Failed to fetch data from API.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     }
