@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const { StaticAuthProvider } = require("@twurple/auth");
 const { ApiClient } = require("@twurple/api");
 const { EventSubWsListener } = require("@twurple/eventsub-ws");
@@ -21,25 +22,101 @@ const buttonWrapper = require("./button-wrapper.js");
 const ttv_app_id = process.env.TWITCH_CLIENT_ID;
 const ttv_app_secret = process.env.TWITCH_CLIENT_SECRET;
 
-/* TWITCH USERS */
-const ttv_id_lucian = process.env.TTV_STLUCIAN_ID;
-const ttv_id_nekosoul = process.env.TTV_NEKOSOUL_ID;
-
 /* DISCORD APP TOKENS */
 const dc_app_lucia_token = process.env.DC_APP_TOKEN;
-/* const dc_app_lucia_id = process.env.DC_APP_ID; */
-const dc_app_lucia_log = process.env.DC_CHANNEL_LUCIALOG;
-const dc_app_guild_id = process.env.DC_APP_GUILD_ID;
-const welcome_channel_id = process.env.DC_CHANNEL_WELCOME;
-const dc_app_library_of_babel = process.env.DC_CHANNEL_LIBRARY_OF_BABEL;
+// const dc_app_lucia_id = process.env.DC_APP_ID;
+const dc_app_lucia_log = process.env.DC_APP_LOG;
 
-/* DISCORD STREAM ALERT CHANNELS */
-const dc_alert_lucian = process.env.DC_CHANNEL_STLUCIAN;
-const dc_alert_nekosoul = process.env.DC_CHANNEL_NEKOSOUL;
+/* DISCORD CHANNELS */
+const dc_data_lucian = {
+    id: process.env.DC_GUILD_ID_LUCIAN,
+    welcome: {
+        channel_id: process.env.DC_CHANNEL_STLUCIAN_WELCOME,
+        message: `## Ya~ho☆\nIt's Lucia! Welcome to\n# La résidence de Lucian!\nClick the button below to join!`,
+        buttons: [
+            new ButtonBuilder()
+                .setCustomId("join_server_lucian")
+                .setLabel("Join Server")
+                .setEmoji("👋")
+                .setStyle(ButtonStyle.Success),
+            ],
+        },
+    roles: {
+        channel_id: process.env.DC_CHANNEL_STLUCIAN_ROLES,
+        message: `# Select your interests\n - Click the button to access the room\n - Click the button again to leave`,
+        buttons: [
+            new ButtonBuilder()
+            .setCustomId("girls_frontline")
+            .setLabel("Girls Frontline")
+            .setEmoji("🎯")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("blue_archive")
+            .setLabel("Blue Archive")
+            .setEmoji("📘")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("city_builders")
+            .setLabel("City Builders")
+            .setEmoji("🏙️")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("minecraft")
+            .setLabel("Minecraft")
+            .setEmoji("⛏️")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("music_rhythm")
+            .setLabel("Music & Rhythm Games")
+            .setEmoji("🎵")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("arts_photography")
+            .setLabel("Arts & Photography")
+            .setEmoji("🎨")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("pokemon")
+            .setLabel("Pokémon")
+            .setEmoji("🐹")
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("wordle")
+            .setLabel("Wordle")
+            .setEmoji("🧩")
+            .setStyle(ButtonStyle.Secondary),
+        ],
+    },
+    alert: undefined
+};
 
-/* ALERT MESSAGES */
-const msg_lucian = `**Lucian nii-san just went live!**\nLet's go visit the penthouse! <a:LuciaCaughtIn4K:1214998758295601232>\nhttps://twitch.tv/stlucian`;
-const msg_nekosoul = `**Soul-chan just went live!**\nLet's go visit the rabbit house! :heart:\nhttps://twitch.tv/nekoso_ul`;
+const dc_data_momineko = {
+    id: process.env.DC_GUILD_ID_MOMINEKO,
+    welcome: {
+        channel_id: process.env.DC_CHANNEL_MOMINEKO_WELCOME,
+        message: `## Ya~ho☆\nIt's Lucia, Momi's new receptionist! Welcome to\n# Momi's Motherbase!\n Click the button to join! :heart:`,
+        buttons: [
+            new ButtonBuilder()
+                .setCustomId("join_server_momineko")
+                .setLabel("Join Server")
+                .setEmoji("💜")
+                .setStyle(ButtonStyle.Secondary),
+        ],
+    },
+    roles: undefined,
+    alert: undefined
+};
+
+const dc_data_nekosoul = {
+    id: process.env.DC_GUILD_ID_NEKOSOUL,
+    welcome: undefined,
+    roles: undefined,
+    alert: {
+        twitch_id: process.env.TTV_ID_NEKOSOUL,
+        channel: process.env.DC_CHANNEL_NEKOSOUL_ALERT,
+        message: `**Soul-chan just went live!**\nLet's go visit the rabbit house! :heart:\nhttps://twitch.tv/nekoso_ul`,
+    }
+};
 
 const lucia = new Client({
     intents: [
@@ -57,9 +134,7 @@ let tokens = {
     refresh_token: process.env.TWITCH_REFRESH_TOKEN,
 };
 let listeners = null;
-
-let listeners_lucian = [];
-let listeners_nekosoul = [];
+let twitchListenersList = [];
 
 function initCommands() {
     lucia.commands = new Collection();
@@ -127,16 +202,12 @@ function luciaError(error = "Lucia is now confused!") {
     luciaLog(error);
 }
 
-function announceOnDiscord(twitchID = null) {
-    switch (twitchID) {
-        case getTwitchID("stlucian"):
-            lucia.channels.cache.get(dc_alert_lucian).send(msg_lucian);
-            break;
-        case getTwitchID("nekoso_ul"):
-            lucia.channels.cache.get(dc_alert_nekosoul).send(msg_nekosoul);
-            break;
-        default:
-            luciaLog("Twitch user invalid, cannot annouce on Discord");
+function announceOnDiscord(alertChannel = null , message = null) {
+    if (!alertChannel || !message) {
+        luciaLog("Missing parameters for announcing on Discord");
+        return;
+    } else {
+        lucia.channels.cache.get(alertChannel).send(message);
     }
 }
 
@@ -190,17 +261,6 @@ function setLuciaPresence(status = "error") {
     }
 }
 
-function getTwitchID(username) {
-    switch (username) {
-        case "stlucian":
-            return ttv_id_lucian;
-        case "nekoso_ul":
-            return ttv_id_nekosoul;
-        default:
-            return null;
-    }
-}
-
 /* Validate Tokens */
 async function isTwitchTokenValid(access_token) {
     let headers = new Headers();
@@ -227,45 +287,29 @@ async function createListener(access_token) {
 
     /* STREAM START */
     try {
-        listeners_lucian[0] = listeners.onStreamOnline(ttv_id_lucian, () => {
-            announceOnDiscord(ttv_id_lucian);
-            luciaLog("StLucian started streaming");
-            setLuciaPresence("streaming");
-            isStreaming = true;
-        });
-        luciaLog(`**[Created]** StLucian's online listener`);
-
-        listeners_nekosoul[0] = listeners.onStreamOnline(
-            ttv_id_nekosoul,
+        twitchListenersList[0] = listeners.onStreamOnline(
+            dc_data_nekosoul.alert.twitch_id,
             () => {
-                announceOnDiscord(ttv_id_nekosoul);
+                announceOnDiscord(dc_data_nekosoul.alert.channel, dc_data_nekosoul.alert.message);
                 luciaLog("NeKoSo_UL started streaming");
             }
-        );
-        luciaLog(`**[Created]** NeKoSo_UL's online listener`);
+        )
+        luciaLog(`**[Created]** Listener: ${twitchListenersList[0].toString()}`);
     } catch (error) {
-        throw new luciaError(error);
+        throw new luciaError(error.toString());
     }
 
     /* STREAM STOP */
     try {
-        listeners_lucian[1] = listeners.onStreamOffline(ttv_id_lucian, () => {
-            luciaLog("StLucian went offline");
-            setLuciaPresence("standby");
-            isStreaming = false;
-        });
-        luciaLog(`**[Created]** StLucian's offline listener`);
-
-        listeners_nekosoul[1] = listeners.onStreamOffline(
-            ttv_id_nekosoul,
+        twitchListenersList[1] = listeners.onStreamOffline(
+            dc_data_nekosoul.alert.twitch_id,
             () => {
-                announceOnDiscord(dc_alert_nekosoul);
                 luciaLog("NeKoSo_UL went offline");
             }
-        );
-        luciaLog(`**[Created]** NeKoSo_UL's offline listener`);
+        )
+        luciaLog(`**[Created]** Listener: ${twitchListenersList[1].toString()}`);
     } catch (error) {
-        throw new luciaError(error);
+        throw new luciaError(error.toString());
     }
 }
 
@@ -321,20 +365,20 @@ async function performMaintenance() {
     luciaLog(`**[Maintenance]** Starting...`);
 
     try {
-        await listeners_lucian[0].stop();
-        luciaLog(`**[Stopped]** StLucian's online listener`);
-        await listeners_lucian[1].stop();
-        luciaLog(`**[Stopped]** StLucian's offline listener`);
-        await listeners_nekosoul[0].stop();
-        luciaLog(`**[Stopped]** NeKoSo_UL's online listener`);
-        await listeners_nekosoul[1].stop();
-        luciaLog(`**[Stopped]** NeKoSo_UL's offline listener`);
-        await listeners.stop();
-        luciaLog(`**[Stopped]** All listeners`);
-        listeners.removeListener();
-        luciaLog("Deleted Listeners");
+        let tempListener;
+        if (twitchListenersList.length > 0) {
+            for (tempListener of twitchListenersList) {
+                await tempListener.stop();
+            }
+        }
+        await listeners.stop().then(() => {
+            luciaLog(`**[Stopped]** All listeners`);
+            listeners.removeListener().then(() => {
+                luciaLog("Deleted Listeners");
+            });
+        });
     } catch (error) {
-        throw new luciaError(error);
+        throw new luciaError(error.toString());
     }
 
     tokens = await refreshToken(tokens);
@@ -356,10 +400,13 @@ async function initializeSequence() {
 
 /* React Roles */
 
-async function initServerJoin() {
-    const server = await lucia.channels.fetch(welcome_channel_id);
+async function initServerJoin(discordData) {
+    if (!discordData.welcome) {
+        return;
+    }
+    const server = await lucia.channels.fetch(discordData.welcome.channel_id);
     if (!server) {
-        luciaLog(`Channel not found: ${welcome_channel_id}`);
+        luciaLog(`Channel not found: ${discordData.welcome.channel_id}`);
         return;
     }
 
@@ -369,16 +416,10 @@ async function initServerJoin() {
     );
 
     const firstMessage = botMessages.first();
-    const buttons = [
-        new ButtonBuilder()
-            .setCustomId("join-server")
-            .setLabel("Join Server")
-            .setEmoji("👋")
-            .setStyle(ButtonStyle.Success),
-    ];
+    const buttons = discordData.welcome.buttons;
 
     const messageObject = {
-        content: "**Welcome to**\n# La résidence de Lucian\n- Click the button below to join.",
+        content: discordData.welcome.message,
         components: buttonWrapper(buttons),
     };
 
@@ -389,109 +430,67 @@ async function initServerJoin() {
     }
 }
 
-async function initRoleSelector() {
-    const libraryOfBabel = await lucia.channels.fetch(dc_app_library_of_babel);
-    if (!libraryOfBabel) {
-        luciaLog(`Channel not found: ${dc_app_library_of_babel}`);
+async function initRoleSelector(discordData) {
+    if (!discordData.roles) {
+        return;
+    }
+    const server = await lucia.channels.fetch(discordData.roles.channel_id);
+    if (!server) {
+        luciaLog(`Channel not found: ${discordData.roles.channel_id}`);
         return;
     }
 
-    const messages = await libraryOfBabel.messages.fetch({ limit: 100 });
+    const messages = await server.messages.fetch({ limit: 100 });
     const botMessages = messages.filter(
         (msg) => msg.author.id === lucia.user.id
     );
 
     const firstMessage = botMessages.first();
-
-    const buttons = [
-        new ButtonBuilder()
-            .setCustomId("girls_frontline")
-            .setLabel("Girls Frontline")
-            .setEmoji("🎯")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("blue_archive")
-            .setLabel("Blue Archive")
-            .setEmoji("📘")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("city_builders")
-            .setLabel("City Builders")
-            .setEmoji("🏙️")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("minecraft")
-            .setLabel("Minecraft")
-            .setEmoji("⛏️")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("music-rhythm")
-            .setLabel("Music & Rhythm Games")
-            .setEmoji("🎵")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("arts-photography")
-            .setLabel("Arts & Photography")
-            .setEmoji("🎨")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("pokemon")
-            .setLabel("Pokémon")
-            .setEmoji("🐹")
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId("wordle")
-            .setLabel("Wordle")
-            .setEmoji("🧩")
-            .setStyle(ButtonStyle.Secondary),
-    ];
+    const buttons = discordData.roles.buttons;
 
     const messageObject = {
-        content:
-            "# Select your interests\n - Click the button to access the room\n - Click the button again to leave",
+        content: discordData.roles.message,
         components: buttonWrapper(buttons),
     };
 
     if (firstMessage) {
         firstMessage.edit(messageObject);
     } else {
-        libraryOfBabel.send(messageObject);
+        server.send(messageObject);
     }
 }
 
-async function getRoles(userId) {
-    const member = await lucia.guilds.cache
-        .get(dc_app_guild_id)
-        ?.members.fetch(userId);
+async function getRoles(userId, discordData) {
+    const member = await lucia.guilds.cache.get(discordData.id).members.fetch(userId);
     if (!member) return;
 
     const roles = member.roles.cache.map((role) => role.name);
     return roles;
 }
 
-async function doCheckRole(userId, roles, roleName, interaction) {
+async function doCheckRole(userId, roles, roleName, interaction, discordData) {
     const tempInt = interaction ?? null;
     if (roles && roles.includes(roleName)) {
-        await removeRole(userId, roleName);
+        await removeRole(userId, roleName, discordData);
         if (tempInt) {
             await tempInt.reply({
-                content: `You have been removed from the **${roleName}** room.`,
+                content: `You have been removed from **${roleName}**.`,
                 flags: MessageFlags.Ephemeral,
             });
         }
     } else {
-        await addRole(userId, roleName);
+        await addRole(userId, roleName, discordData);
         if (tempInt) {
             await tempInt.reply({
-                content: `You have been added to the **${roleName}** room.`,
+                content: `You have been added to the **${roleName}**.`,
                 flags: MessageFlags.Ephemeral,
             });
         }
     }
 }
 
-async function addRole(userId, roleName) {
-    const guild = lucia.guilds.cache.get(dc_app_guild_id);
+async function addRole(userId, roleName, discordData) {
+    const guild = lucia.guilds.cache.get(discordData.id);
     if (!guild) return;
 
     const member = await guild.members.fetch(userId);
@@ -503,8 +502,8 @@ async function addRole(userId, roleName) {
     await member.roles.add(role);
 }
 
-async function removeRole(userId, roleName) {
-    const guild = lucia.guilds.cache.get(dc_app_guild_id);
+async function removeRole(userId, roleName, discordData) {
+    const guild = lucia.guilds.cache.get(discordData.id);
     if (!guild) return;
 
     const member = await guild.members.fetch(userId);
@@ -524,8 +523,9 @@ if (startSuccess) {
         luciaLog("**Lucia** is being initialized...");
         tokens = await initializeSequence();
         initCommands();
-        await initServerJoin();
-        await initRoleSelector();
+        await initServerJoin(dc_data_lucian);
+        await initServerJoin(dc_data_momineko);
+        await initRoleSelector(dc_data_lucian);
         setInterval(performMaintenance, 1000 * 60 * 60 * 3); // Maintenance every 3 hours
     });
 
@@ -535,35 +535,52 @@ if (startSuccess) {
 
             const buttonId = interaction.customId ?? null;
             const userId = interaction.user.id;
-            const roles = await getRoles(userId);
+            let discordData;
+            switch (interaction.guildId) {
+                case dc_data_lucian.id:
+                    discordData = dc_data_lucian;
+                    break;
+                case dc_data_momineko.id:
+                    discordData = dc_data_momineko;
+                    break;
+                case dc_data_nekosoul.id:
+                    discordData = dc_data_nekosoul;
+                    break;
+                default:
+                    discordData = null;
+            }
+            const roles = await getRoles(userId, discordData);
 
             switch (buttonId) {
                 case "girls_frontline":
-                    doCheckRole(userId, roles, "Girls Frontline", interaction);
+                    doCheckRole(userId, roles, "Girls Frontline", interaction, discordData);
                     break;
                 case "blue_archive":
-                    doCheckRole(userId, roles, "Blue Archive", interaction);
+                    doCheckRole(userId, roles, "Blue Archive", interaction, discordData);
                     break;
                 case "city_builders":
-                    doCheckRole(userId, roles, "City Builders", interaction);
+                    doCheckRole(userId, roles, "City Builders", interaction, discordData);
                     break;
                 case "minecraft":
-                    doCheckRole(userId, roles, "Minecraft", interaction);
+                    doCheckRole(userId, roles, "Minecraft", interaction, discordData);
                     break;
-                case "music-rhythm":
-                    doCheckRole(userId, roles, "Rhythms", interaction);
+                case "music_rhythm":
+                    doCheckRole(userId, roles, "Rhythms", interaction, discordData);
                     break;
-                case "arts-photography":
-                    doCheckRole(userId, roles, "Museum Goers", interaction);
+                case "arts_photography":
+                    doCheckRole(userId, roles, "Museum Goers", interaction, discordData);
                     break;
                 case "pokemon":
-                    doCheckRole(userId, roles, "Pokemon", interaction);
+                    doCheckRole(userId, roles, "Pokemon", interaction, discordData);
                     break;
                 case "wordle":
-                    doCheckRole(userId, roles, "Wordle", interaction);
+                    doCheckRole(userId, roles, "Wordle", interaction, discordData);
                     break;
-                case "join-server":
-                    doCheckRole(userId, roles, "Visitor", interaction);
+                case "join_server_lucian":
+                    doCheckRole(userId, roles, "Visitor", interaction, discordData);
+                    break;
+                case "join_server_momineko":
+                    doCheckRole(userId, roles, "StarPeople", interaction, discordData);
                     break;
                 default:
                     await interaction.reply({
