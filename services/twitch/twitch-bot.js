@@ -1,9 +1,9 @@
-const { StaticAuthProvider } = require("@twurple/auth");
-const { ApiClient } = require("@twurple/api");
-const { EventSubWsListener } = require("@twurple/eventsub-ws");
+import { StaticAuthProvider } from "@twurple/auth";
+import { ApiClient } from "@twurple/api";
+import { EventSubWsListener } from "@twurple/eventsub-ws";
 
-class TwitchBot {
-    constructor(appId, appSecret, refreshToken) {
+export class TwitchBot {
+    constructor({ appId, appSecret, refreshToken }) {
         this.refreshToken = refreshToken;
         this.accessToken = null;
         this.appId = appId;
@@ -13,10 +13,6 @@ class TwitchBot {
     }
 
     async refreshAccessToken(onRefreshToken = () => {}) {
-        if (onRefreshToken) {
-            onRefreshToken();
-        }
-
         let headers = new Headers();
         headers.append(`Content-Type`, `application/json`);
 
@@ -38,6 +34,10 @@ class TwitchBot {
 
         if (newAccessToken) {
             this.accessToken = newAccessToken;
+        }
+        
+        if (onRefreshToken && typeof onRefreshToken === "function") {
+            onRefreshToken();
         }
     }
 
@@ -102,18 +102,20 @@ class TwitchBot {
         }
     }
 
-    async performMaintenance(
-        oncallbackOnline = () => {},
-        oncallbackOffline = () => {}
-    ) {
+    async performMaintenance(options = {
+        oncallbackOnline: () => {},
+        oncallbackOffline: () => {}
+    }) {
+        
+        await this.stopMainListener();
         await this.refreshAccessToken();
         const valid = await this.checkToken();
         if (!valid) {
             throw new Error("Invalid Twitch Access Token");
         }
-        await this.stopMainListener();
         await this.initMainListener(
-            oncallbackOnline, oncallbackOffline
+            options.oncallbackOnline,
+            options.oncallbackOffline
         );
     }
 }
