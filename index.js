@@ -162,10 +162,10 @@ if (start) {
         );
 
         if (!command) {
-            console.error(`No command found for ${interaction.commandName}`);
+            console.error(`No command found for ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toISOString()}`);
             return;
         } else {
-            console.log(`Executing command: ${interaction.commandName}`);
+            console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toISOString()}`);
         }
 
         try {
