@@ -123,9 +123,11 @@ async function initTwitch() {
 
 if (start) {
     luciaApp.on(Events.ClientReady, async () => {
+        luciaApp.setStatus("busy");
         await initCommands();
         await initTwitch();
         luciaApp.initRoleButtons();
+        luciaApp.setStatus("standby");
         setInterval(async () => {
             try {
                 await twitchApp.performMaintenance({
