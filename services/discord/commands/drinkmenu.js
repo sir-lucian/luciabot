@@ -25,13 +25,14 @@ module.exports = {
         try {
             const response = await fetch(fetchUrl);
             const answer = await response.text();
-            await interaction.reply(answer);
+            return answer;
         } catch (e) {
-            console.error(e);
-            await interaction.reply({
+            console.error("Command drinksmenu error:", e);
+            await interaction.followUp({
                 content: "Failed to fetch data from API.",
                 flags: MessageFlags.Ephemeral,
             });
+            return null;
         }
     }
 }
