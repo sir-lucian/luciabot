@@ -1,5 +1,5 @@
-const { ButtonBuilder } = require('@discordjs/builders');
-const { ButtonStyle } = require('discord.js');
+const { ButtonBuilder, EmbedBuilder } = require("@discordjs/builders");
+const { ButtonStyle } = require("discord.js");
 require("dotenv/config");
 
 const WELCOME_MESSAGE = `## Ya~ho☆\nIt's Lucia! Welcome to\n# La résidence de Lucian!\nClick the button below to join!`;
@@ -103,7 +103,7 @@ function initRoleSelector() {
 
     buttons.push(
         initButton({
-            id: "umamusume",
+            id: "uma_musume",
             label: "Uma Musume",
             emoji: { name: "🐴" },
             style: ButtonStyle.Secondary,
@@ -122,11 +122,18 @@ function initRoleSelector() {
     return buttons;
 }
 
-const embed = [{
-    image: {
-        url: 'https://lucian.solutions/images/22.jpg',
-    }
-}];
+const embed = [
+    new EmbedBuilder()
+        .setTitle("Ya~ho☆")
+        .setDescription("It's Lucia! This is La résidence de Lucian!")
+        .setImage("https://lucian.solutions/images/22.jpg")
+        .setAuthor({
+            name: "Lucia",
+            iconURL: "https://lucian.solutions/images/335.png",
+        })
+        .setFooter({ text: "Lucian Solutions" })
+        .setColor(0xd4af37),
+];
 
 module.exports = {
     id: process.env.DC_GUILD_ID_LUCIAN,

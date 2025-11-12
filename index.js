@@ -42,12 +42,38 @@ const start = luciaApp.initClient();
 
 function handleButtonInteraction(interaction) {
     switch (interaction.customId) {
-        case "join_server_test":
-            luciaApp.doToggleRole(
-                interaction.user.id,
-                "Test Server Member",
-                interaction
-            );
+        case "join_server_lucian":
+            luciaApp.doToggleRole("Visitor", interaction);
+            break;
+        case "join_server_momineko":
+            luciaApp.doToggleRole("StarPeople", interaction);
+            break;
+        case "girls_frontline":
+            luciaApp.doToggleRole("Girls Frontline", interaction);
+            break;
+        case "blue_archive":
+            luciaApp.doToggleRole("Blue Archive", interaction);
+            break;
+        case "city_builders":
+            luciaApp.doToggleRole("City Builders", interaction);
+            break;
+        case "minecraft":
+            luciaApp.doToggleRole("Minecraft", interaction);
+            break;
+        case "music_rhythm":
+            luciaApp.doToggleRole("Rhythms", interaction);
+            break;
+        case "arts_photography":
+            luciaApp.doToggleRole("Museum Goers", interaction);
+            break;
+        case "pokemon":
+            luciaApp.doToggleRole("Pokemon", interaction);
+            break;
+        case "uma_musume":
+            luciaApp.doToggleRole("Uma Musume", interaction);
+            break;
+        case "wordle":
+            luciaApp.doToggleRole("Wordle", interaction);
             break;
         default:
             interaction.reply({
@@ -71,30 +97,6 @@ async function initCommands() {
             luciaApp.commands.set(command.data.name, command);
         }
     }
-
-    luciaApp.on(Events.InteractionCreate, async (interaction) => {
-        const command = await interaction.client.commands.get(
-            interaction.commandName
-        );
-        if (!command) {
-            return;
-        }
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({
-                    content: "There was an error while executing this command!",
-                    flags: MessageFlags.Ephemeral,
-                });
-            } else {
-                await interaction.reply({
-                    content: "There was an error while executing this command!",
-                    flags: MessageFlags.Ephemeral,
-                });
-            }
-        }
-    });
 }
 
 async function initTwitch() {
@@ -125,14 +127,21 @@ if (start) {
         await initTwitch();
         luciaApp.initRoleButtons();
         setInterval(async () => {
-            await twitchApp.performMaintenance({
-                oncallbackOnline: () => {
-                    luciaApp.log("Twitch access token refreshed during maintenance");
-                },
-                oncallbackOffline: () => {
-                    luciaApp.log("Twitch stream is online (maintenance)");
-                },
-            });
+            try {
+                await twitchApp.performMaintenance({
+                    oncallbackOnline: () => {
+                        luciaApp.log(
+                            "Twitch access token refreshed during maintenance"
+                        );
+                    },
+                    oncallbackOffline: () => {
+                        luciaApp.log("Twitch stream is online (maintenance)");
+                    },
+                });
+            } catch (error) {
+                console.error("Error during Twitch maintenance:", error);
+                luciaApp.log(`Error during Twitch maintenance: ${error}`);
+            }
         }, 1000 * 60 * 60 * 3.25); // Maintenance every ~3 hours
     });
 
@@ -140,6 +149,48 @@ if (start) {
         if (!interaction.isButton()) return;
         handleButtonInteraction(interaction);
     });
+
+    luciaApp.on(Events.InteractionCreate, async (interaction) => {
+        if (!interaction.isChatInputCommand()) return;
+
+        await interaction.deferReply();
+
+        const command = await interaction.client.commands.get(
+            interaction.commandName
+        );
+
+        if (!command) {
+            console.error(`No command found for ${interaction.commandName}`);
+            return;
+        } else {
+            console.log(`Executing command: ${interaction.commandName}`);
+        }
+
+        try {
+            const response = await command.execute(interaction);
+            if (response) {
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.editReply(response);
+                } else {
+                    await interaction.reply(response);
+                }
+            }
+        } catch (error) {
+            console.error("Error executing command:", error);
+            if (interaction.replied || interaction.deferred) {
+                interaction.followUp({
+                    content: "There was an error while executing this command!",
+                    flags: MessageFlags.Ephemeral,
+                });
+            } else {
+                interaction.reply({
+                    content: "There was an error while executing this command!",
+                    flags: MessageFlags.Ephemeral,
+                });
+            }
+        }
+    });
+
 } else {
     console.error("Failed to start bot");
 }

@@ -36,13 +36,14 @@ module.exports = {
         try {
             const response = await fetch(fetchUrl);
             const answer = await response.text();
-            await interaction.reply(answer);
+            return answer;
         } catch (e) {
-            console.error(e);
+            console.error("Command foodmenu error:", e);
             await interaction.reply({
                 content: "Failed to fetch data from API.",
                 flags: MessageFlags.Ephemeral
             });
+            return null;
         }
         
     }

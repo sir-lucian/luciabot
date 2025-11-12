@@ -1,8 +1,8 @@
-import { StaticAuthProvider } from "@twurple/auth";
-import { ApiClient } from "@twurple/api";
-import { EventSubWsListener } from "@twurple/eventsub-ws";
+const { StaticAuthProvider } = require("@twurple/auth");
+const { ApiClient } = require("@twurple/api");
+const { EventSubWsListener } = require("@twurple/eventsub-ws");
 
-export class TwitchBot {
+class TwitchBot {
     constructor({ appId, appSecret, refreshToken }) {
         this.refreshToken = refreshToken;
         this.accessToken = null;
@@ -155,4 +155,7 @@ class TwitchListener {
     }
 }
 
-export { TwitchBot, TwitchListener };
+module.exports = {
+    TwitchBot,
+    TwitchListener,
+};

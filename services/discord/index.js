@@ -1,11 +1,12 @@
-import {
+const {
     ActionRowBuilder,
     ActivityType,
     Client,
     GatewayIntentBits,
     IntentsBitField,
     MessageFlags,
-} from "discord.js";
+    PresenceUpdateStatus
+} = require("discord.js");
 
 function buttonWrapper(buttons) {
     const components = [];
@@ -26,7 +27,7 @@ function buttonWrapper(buttons) {
     return components;
 }
 
-export class DiscordBot extends Client {
+class DiscordBot extends Client {
     constructor(token, name, options = {}) {
         console.log("Starting Discord Bot...", name);
         if (!token) throw new Error("Discord token is required");
@@ -96,7 +97,8 @@ export class DiscordBot extends Client {
     }
 
     log(message) {
-        this.channels.cache.get(this.logChannel).send(message);
+        this.channels.cache.get(this.log_channel).send(message);
+        console.log(`[${this.name} LOG]: ${message}`);
     }
 
     setStatus(status = "error") {
@@ -109,7 +111,7 @@ export class DiscordBot extends Client {
                             type: ActivityType.Listening,
                         },
                     ],
-                    status: "online",
+                    status: PresenceUpdateStatus.Online,
                 });
                 break;
             case "busy":
@@ -120,7 +122,7 @@ export class DiscordBot extends Client {
                             type: ActivityType.Playing,
                         },
                     ],
-                    status: "dnd",
+                    status: PresenceUpdateStatus.DoNotDisturb,
                 });
                 break;
             case "error":
@@ -132,7 +134,7 @@ export class DiscordBot extends Client {
                             type: ActivityType.Listening,
                         },
                     ],
-                    status: "dnd",
+                    status: PresenceUpdateStatus.DoNotDisturb,
                 });
         }
     }
@@ -157,15 +159,15 @@ export class DiscordBot extends Client {
         }
     }
 
-    async doToggleRole(user_id, role_name, interaction) {
+    async doToggleRole(role_name, interaction) {
         const tempInteraction = interaction ?? null;
         const activeServerId =
             this.servers.find((server) => server.id === interaction.guildId)
                 .id ?? null;
         if (!activeServerId) return;
-        const roles = await this.#getRoles(user_id, activeServerId);
+        const roles = await this.#getRoles(interaction.user.id, activeServerId);
         if (roles && roles.includes(role_name)) {
-            this.#removeRole(user_id, role_name, activeServerId);
+            this.#removeRole(interaction.user.id, role_name, activeServerId);
             if (tempInteraction) {
                 tempInteraction.reply({
                     content: `You've been removed from **${role_name}**`,
@@ -173,7 +175,7 @@ export class DiscordBot extends Client {
                 });
             }
         } else if (roles && !roles.includes(role_name)) {
-            this.#addRole(user_id, role_name, activeServerId);
+            this.#addRole(interaction.user.id, role_name, activeServerId);
             if (tempInteraction) {
                 tempInteraction.reply({
                     content: `You've been added to **${role_name}**`,
@@ -222,3 +224,7 @@ export class DiscordBot extends Client {
         await member.roles.remove(role);
     }
 }
+
+module.exports = {
+    DiscordBot,
+};
