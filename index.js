@@ -12,11 +12,22 @@ const {
     IntentsBitField,
     MessageFlags,
     ButtonBuilder,
+    EmbedBuilder,
     ButtonStyle,
 } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
 const buttonWrapper = require("./button-wrapper.js");
+
+const lucia = new Client({
+    intents: [
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent,
+        GatewayIntentBits.Guilds,
+    ],
+});
 
 /* TWITCH APP TOKENS */
 const ttv_app_id = process.env.TWITCH_CLIENT_ID;
@@ -33,11 +44,28 @@ const dc_data_lucian = {
     welcome: {
         channel_id: process.env.DC_CHANNEL_STLUCIAN_WELCOME,
         message: `## Ya~ho☆\nIt's Lucia! Welcome to\n# La résidence de Lucian!\nClick the button below to join!`,
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("Ya~ho☆")
+                .setDescription(
+                    "It's Lucia! This is La résidence de Lucian!")
+                .setImage("https://lucian.solutions/images/22.jpg")
+                .setAuthor({
+                    name: "Lucia",
+                    iconURL: "https://lucian.solutions/images/335.png",
+                })
+                .setFooter({ text: "Lucian Solutions" })
+                .setColor(0xd4af37),
+        ],
         buttons: [
             new ButtonBuilder()
                 .setCustomId("join_server_lucian")
                 .setLabel("Join Server")
-                .setEmoji("👋")
+                .setEmoji({
+                    id: "1213050602125525063",
+                    name: "LucianHey",
+                    animated: false,
+                })
                 .setStyle(ButtonStyle.Success),
         ],
     },
@@ -81,6 +109,11 @@ const dc_data_lucian = {
                 .setEmoji("🐹")
                 .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
+                .setCustomId("uma_musume")
+                .setLabel("Uma Musume")
+                .setEmoji("🐴")
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
                 .setCustomId("wordle")
                 .setLabel("Wordle")
                 .setEmoji("🧩")
@@ -95,11 +128,31 @@ const dc_data_momineko = {
     welcome: {
         channel_id: process.env.DC_CHANNEL_MOMINEKO_WELCOME,
         message: `## Ya~ho☆\nIt's Lucia, Momi's new receptionist! Welcome to\n# Momi's Motherbase!\n Click the button to join! :heart:`,
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("Ya~ho☆")
+                .setDescription(
+                    "It's Lucia! This is Momi's Motherbase!"
+                )
+                .setImage(
+                    "https://pbs.twimg.com/media/F_qPYXuacAAXjT3?format=jpg&name=large"
+                )
+                .setAuthor({
+                    name: "Lucia",
+                    iconURL: "https://lucian.solutions/images/335.png",
+                })
+                .setFooter({ text: "Lucian Solutions" })
+                .setColor(0x7f00ff),
+        ],
         buttons: [
             new ButtonBuilder()
                 .setCustomId("join_server_momineko")
                 .setLabel("Join Server")
-                .setEmoji("💜")
+                .setEmoji({
+                    id: "980341340669890571",
+                    name: "momiluv2",
+                    animated: false,
+                })
                 .setStyle(ButtonStyle.Secondary),
         ],
     },
@@ -117,16 +170,6 @@ const dc_data_nekosoul = {
         message: `**Soul-chan just went live!**\nLet's go visit the rabbit house! :heart:\nhttps://twitch.tv/nekoso_ul`,
     },
 };
-
-const lucia = new Client({
-    intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMembers,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.MessageContent,
-        GatewayIntentBits.Guilds,
-    ],
-});
 
 let tokens = {
     access_token: undefined,
@@ -397,10 +440,14 @@ async function initServerJoin(discordData) {
     const firstMessage = botMessages.first();
     const buttons = discordData.welcome.buttons;
 
-    const messageObject = {
+    let messageObject = {
         content: discordData.welcome.message,
         components: buttonWrapper(buttons),
     };
+
+    if (discordData.welcome.embeds) {
+        messageObject.embeds = discordData.welcome.embeds;
+    }
 
     if (firstMessage) {
         firstMessage.edit(messageObject);
@@ -427,10 +474,14 @@ async function initRoleSelector(discordData) {
     const firstMessage = botMessages.first();
     const buttons = discordData.roles.buttons;
 
-    const messageObject = {
+    let messageObject = {
         content: discordData.roles.message,
         components: buttonWrapper(buttons),
     };
+
+    if (discordData.roles.embeds) {
+        messageObject.embeds = discordData.roles.embeds;
+    }
 
     if (firstMessage) {
         firstMessage.edit(messageObject);
@@ -500,7 +551,7 @@ async function removeRole(userId, roleName, discordData) {
 
 const startSuccess = luciaStart();
 if (startSuccess) {
-    lucia.on("ready", async () => {
+    lucia.on(Events.ClientReady, async () => {
         luciaLog("**Lucia** is being initialized...");
         tokens = await initializeSequence();
         initCommands();
@@ -592,6 +643,15 @@ if (startSuccess) {
                         userId,
                         roles,
                         "Pokemon",
+                        interaction,
+                        discordData
+                    );
+                    break;
+                case "uma_musume":
+                    doCheckRole(
+                        userId,
+                        roles,
+                        "Uma Musume",
                         interaction,
                         discordData
                     );
