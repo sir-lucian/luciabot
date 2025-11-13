@@ -8,12 +8,14 @@ const {
     PresenceUpdateStatus
 } = require("discord.js");
 
+const maxButtonsPerRow = 5;
+
 function buttonWrapper(buttons) {
     const components = [];
     let row = new ActionRowBuilder();
 
     for (let i = 0; i < buttons.length && i < 20; i++) {
-        if (i % 4 === 0 && i > 0) {
+        if (i % maxButtonsPerRow === 0 && i > 0) {
             components.push(row);
             row = new ActionRowBuilder();
         }

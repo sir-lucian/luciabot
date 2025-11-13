@@ -7,15 +7,15 @@ const WELCOME_MESSAGE = `## Ya~ho☆\nIt's Lucia! Welcome to\n# La résidence de
 const ROLES_MESSAGE = `# Select your interests\n - Click the button to access the room\n - Click the button again to leave`;
 
 const ROLES_LIST = [
-    { id: 'girls_frontline', name: 'Girls Frontline', emoji: '🎯' },
-    { id: 'blue_archive', name: 'Blue Archive', emoji: '📘' },
-    { id: 'city_builders', name: 'City Builders', emoji: '🏙️' },
-    { id: 'minecraft', name: 'Minecraft', emoji: '⛏️' },
-    { id: 'music_rhythm', name: 'Music & Rhythm Games', emoji: '🎵' },
-    { id: 'arts_photography', name: 'Arts & Photography', emoji: '🎨' },
-    { id: 'pokemon', name: 'Pokémon', emoji: '🐹' },
-    { id: 'uma_musume', name: 'Uma Musume', emoji: '🐴' },
-    { id: 'wordle', name: 'Wordle', emoji: '🧩' },
+    { id: 'girls_frontline', name: 'Girls Frontline', description: 'Rooms: Girls Frontline', emoji: '🎯' },
+    { id: 'blue_archive', name: 'Blue Archive', description: 'Rooms: Blue Archive', emoji: '📘' },
+    { id: 'city_builders', name: 'City Builders', description: 'Rooms: City Builders', emoji: '🏙️' },
+    { id: 'minecraft', name: 'Minecraft', description: 'Rooms: Minecraft, Minecraft Server Log', emoji: '⛏️' },
+    { id: 'music_rhythm', name: 'Music & Rhythm Games', description: 'Rooms: Musique et Otoge', emoji: '🎵' },
+    { id: 'arts_photography', name: 'Arts & Photography', description: 'Rooms: La Galerie D\'Art', emoji: '🎨' },
+    { id: 'pokemon', name: 'Pokémon', description: 'Rooms: Pokémon', emoji: '🐹' },
+    { id: 'uma_musume', name: 'Uma Musume', description: 'Rooms: Uma Musume Pretty Derby', emoji: '🐴' },
+    { id: 'wordle', name: 'Wordle', description: 'Rooms: Wordle', emoji: '🧩' },
 ]
 
 function initButton({ id, label, emoji, style }) {
@@ -71,7 +71,7 @@ function transformRolesToFields() {
     ROLES_LIST.forEach(role => {
         fields.push({
             name: `${role.emoji}  ${role.name}`,
-            value: `Click the button below to join or leave the ${role.name} role.`,
+            value: role.description,
             inline: false,
         });
     });
