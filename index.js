@@ -129,20 +129,25 @@ if (start) {
         luciaApp.initRoleButtons();
         luciaApp.setStatus("standby");
         setInterval(async () => {
+            luciaApp.log("Performing Twitch maintenance...");
+            luciaApp.setStatus("busy");
             try {
-                await twitchApp.performMaintenance({
+                const success = await twitchApp.performMaintenance({
                     oncallbackOnline: () => {
                         luciaApp.log(
-                            "Twitch access token refreshed during maintenance"
+                            "Twitch stream is online (maintenance)"
                         );
                     },
                     oncallbackOffline: () => {
-                        luciaApp.log("Twitch stream is online (maintenance)");
+                        luciaApp.log("Twitch stream is offline (maintenance)");
                     },
                 });
+                if (success) {
+                    luciaApp.log("Twitch maintenance completed successfully");
+                    luciaApp.setStatus("standby");
+                }
             } catch (error) {
-                console.error("Error during Twitch maintenance:", error);
-                luciaApp.log(`Error during Twitch maintenance: ${error}`);
+                luciaApp.error(`[Error]: Error during Twitch maintenance: ${error}`);
             }
         }, 1000 * 60 * 60 * 3.25); // Maintenance every ~3 hours
     });
@@ -162,10 +167,10 @@ if (start) {
         );
 
         if (!command) {
-            console.error(`No command found for ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toISOString()}`);
+            console.error(`No command found for ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toLocaleString()}`);
             return;
         } else {
-            console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toISOString()}`);
+            console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toLocaleString()}`);
         }
 
         try {
