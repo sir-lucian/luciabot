@@ -106,17 +106,22 @@ class TwitchBot {
         oncallbackOnline: () => {},
         oncallbackOffline: () => {}
     }) {
-        
-        await this.stopMainListener();
-        await this.refreshAccessToken();
-        const valid = await this.checkToken();
-        if (!valid) {
-            throw new Error("Invalid Twitch Access Token");
+        try {
+            await this.stopMainListener();
+            await this.refreshAccessToken();
+            const valid = await this.checkToken();
+            if (!valid) {
+                throw new Error("Invalid Twitch Access Token");
+            }
+            await this.initMainListener(
+                options.oncallbackOnline,
+                options.oncallbackOffline
+            );
+        } catch (error) {
+            throw new Error(error);
         }
-        await this.initMainListener(
-            options.oncallbackOnline,
-            options.oncallbackOffline
-        );
+        
+        return true;
     }
 }
 

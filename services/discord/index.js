@@ -98,7 +98,7 @@ class DiscordBot extends Client {
 
     log(message) {
         this.channels.cache.get(this.log_channel).send(message);
-        console.log(`[${this.name} LOG]: ${message}`);
+        console.log(`[${this.name} LOG at ${new Date().toLocaleString()}]: ${message}`);
     }
 
     setStatus(status = "error") {
@@ -141,7 +141,7 @@ class DiscordBot extends Client {
 
     announce(channel, message) {
         if (!channel || !message) {
-            this.log("Missing parameters for announcing on Discord");
+            this.log("[Error]: Missing parameters for announcing on Discord");
             return;
         } else {
             this.channels.cache.get(channel).send(message);
@@ -151,11 +151,11 @@ class DiscordBot extends Client {
     error(error = "Unknown error") {
         this.setStatus("error");
         if (typeof error === "object") {
-            this.log(`Error: ${JSON.stringify(error)}`);
+            this.log(`[Error]: ${JSON.stringify(error)}`);
         } else if (typeof error === "string") {
-            this.log(`Error: ${error}`);
+            this.log(`[Error]: ${error}`);
         } else {
-            this.log("Error: Unknown error type");
+            this.log("[Error]: Unknown error type");
         }
     }
 
@@ -198,17 +198,17 @@ class DiscordBot extends Client {
     async #addRole(user_id, role_name, server_id) {
         const guild = this.guilds.cache.get(server_id);
         if (!guild) {
-            console.log("Guild not found");
+            this.log(`[Error]: Guild not found`);
             return;
         }
         const member = await guild.members.fetch(user_id);
         if (!member) {
-            console.log("Member not found");
+            this.log(`[Error]: Member not found`);
             return;
         };
         const role = guild.roles.cache.find((r) => r.name === role_name);
         if (!role) {
-            console.log("Role not found");
+            this.log(`[Error]: Role not found`);
             return;
         };
         await member.roles.add(role);

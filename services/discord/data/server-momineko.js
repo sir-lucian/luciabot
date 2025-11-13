@@ -1,7 +1,7 @@
 const { ButtonBuilder, EmbedBuilder } = require('@discordjs/builders');
 const { ButtonStyle } = require('discord.js');
+const { Embeds } = require("../data/embeds/index.js");
 require("dotenv/config");
-
 
 const WELCOME_MESSAGE = `## Ya~ho☆\nIt's Lucia, Momi's new receptionist! Welcome to\n# Momi's Motherbase!\nClick the button to join! :heart:`;
 
@@ -35,7 +35,9 @@ function initJoinSelector() {
     return buttons;
 }
 
-const embeds = [
+const embeds = new Embeds();
+
+const embedsWelcome = [
     new EmbedBuilder()
         .setTitle("Ya~ho☆")
         .setDescription("It's Lucia! This is Momi's Motherbase!")
@@ -43,10 +45,10 @@ const embeds = [
             "https://pbs.twimg.com/media/F_qPYXuacAAXjT3?format=jpg&name=large"
         )
         .setAuthor({
-            name: "Lucia",
-            iconURL: "https://lucian.solutions/images/335.png",
+            name: embeds.getEmbedsAuthor().name,
+            iconURL: embeds.getEmbedsAuthor().iconURL,
         })
-        .setFooter({ text: "Lucian Solutions" })
+        .setFooter({ text: embeds.getEmbedsFooter().text, iconURL: embeds.getEmbedsFooter().iconURL })
         .setColor(0x7f00ff),
 ];
 
@@ -57,7 +59,7 @@ module.exports = {
             id: 'welcome',
             channel_id: process.env.DC_CHANNEL_MOMINEKO_WELCOME,
             message: WELCOME_MESSAGE,
-            embeds: embeds,
+            embeds: embedsWelcome,
             buttons: initJoinSelector(),
         },
     ],

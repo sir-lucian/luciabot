@@ -1,9 +1,22 @@
 const { ButtonBuilder, EmbedBuilder } = require("@discordjs/builders");
 const { ButtonStyle } = require("discord.js");
+const { Embeds } = require("../data/embeds/index.js");
 require("dotenv/config");
 
 const WELCOME_MESSAGE = `## Ya~ho☆\nIt's Lucia! Welcome to\n# La résidence de Lucian!\nClick the button below to join!`;
 const ROLES_MESSAGE = `# Select your interests\n - Click the button to access the room\n - Click the button again to leave`;
+
+const ROLES_LIST = [
+    { id: 'girls_frontline', name: 'Girls Frontline', emoji: '🎯' },
+    { id: 'blue_archive', name: 'Blue Archive', emoji: '📘' },
+    { id: 'city_builders', name: 'City Builders', emoji: '🏙️' },
+    { id: 'minecraft', name: 'Minecraft', emoji: '⛏️' },
+    { id: 'music_rhythm', name: 'Music & Rhythm Games', emoji: '🎵' },
+    { id: 'arts_photography', name: 'Arts & Photography', emoji: '🎨' },
+    { id: 'pokemon', name: 'Pokémon', emoji: '🐹' },
+    { id: 'uma_musume', name: 'Uma Musume', emoji: '🐴' },
+    { id: 'wordle', name: 'Wordle', emoji: '🧩' },
+]
 
 function initButton({ id, label, emoji, style }) {
     const button = new ButtonBuilder();
@@ -38,102 +51,62 @@ function initJoinSelector() {
 function initRoleSelector() {
     let buttons = [];
 
-    buttons.push(
-        initButton({
-            id: "girls_frontline",
-            label: "Girls Frontline",
-            emoji: { name: "🎯" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "blue_archive",
-            label: "Blue Archive",
-            emoji: { name: "📘" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "city_builders",
-            label: "City Builders",
-            emoji: { name: "🏙️" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "minecraft",
-            label: "Minecraft",
-            emoji: { name: "⛏️" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "music_rhythm",
-            label: "Music & Rhythm Games",
-            emoji: { name: "🎵" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "arts_photography",
-            label: "Arts & Photography",
-            emoji: { name: "🎨" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "pokemon",
-            label: "Pokémon",
-            emoji: { name: "🐹" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "uma_musume",
-            label: "Uma Musume",
-            emoji: { name: "🐴" },
-            style: ButtonStyle.Secondary,
-        })
-    );
-
-    buttons.push(
-        initButton({
-            id: "wordle",
-            label: "Wordle",
-            emoji: { name: "🧩" },
-            style: ButtonStyle.Secondary,
-        })
-    );
+    ROLES_LIST.forEach(role => {
+        buttons.push(
+            initButton({
+                id: role.id,
+                label: role.name,
+                emoji: { name: role.emoji },
+                style: ButtonStyle.Secondary,
+            })
+        );
+    });
 
     return buttons;
 }
 
-const embed = [
+function transformRolesToFields() {
+    let fields = [];
+
+    ROLES_LIST.forEach(role => {
+        fields.push({
+            name: `${role.emoji}  ${role.name}`,
+            value: `Click the button below to join or leave the ${role.name} role.`,
+            inline: false,
+        });
+    });
+
+    return fields;
+}
+
+const embeds = new Embeds();
+
+const embedsWelcome = [
     new EmbedBuilder()
         .setTitle("Ya~ho☆")
         .setDescription("It's Lucia! This is La résidence de Lucian!")
         .setImage("https://lucian.solutions/images/22.jpg")
         .setAuthor({
-            name: "Lucia",
-            iconURL: "https://lucian.solutions/images/335.png",
+            name: embeds.getEmbedsAuthor().name,
+            iconURL: embeds.getEmbedsAuthor().iconURL,
         })
-        .setFooter({ text: "Lucian Solutions" })
+        .setFooter({ text: embeds.getEmbedsFooter().text, iconURL: embeds.getEmbedsFooter().iconURL })
         .setColor(0xd4af37),
 ];
+
+const embedsRoles = [
+    new EmbedBuilder()
+        .setTitle("Ya~ho☆")
+        .setDescription("Please Select Your Interests")
+        .setFields(transformRolesToFields())
+        .setImage("https://lucian.solutions/images/239t.png")
+        .setAuthor({
+            name: embeds.getEmbedsAuthor().name,
+            iconURL: embeds.getEmbedsAuthor().iconURL,
+        })
+        .setFooter({ text: embeds.getEmbedsFooter().text, iconURL: embeds.getEmbedsFooter().iconURL })
+        .setColor(0xd4af37),
+]
 
 module.exports = {
     id: process.env.DC_GUILD_ID_LUCIAN,
@@ -142,13 +115,14 @@ module.exports = {
             id: "welcome",
             channel_id: process.env.DC_CHANNEL_STLUCIAN_WELCOME,
             message: WELCOME_MESSAGE,
-            embeds: embed,
+            embeds: embedsWelcome,
             buttons: initJoinSelector(),
         },
         {
             id: "roles",
             channel_id: process.env.DC_CHANNEL_STLUCIAN_ROLES,
             message: ROLES_MESSAGE,
+            embeds: embedsRoles,
             buttons: initRoleSelector(),
         },
     ],
