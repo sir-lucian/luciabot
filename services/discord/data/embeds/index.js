@@ -1,5 +1,5 @@
 const embedsAuthor = {
-    name: "Lucia",
+    name: "Lucia (@lucialatte_)",
     iconURL: "https://lucian.solutions/images/335.png",
 }
 

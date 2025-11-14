@@ -1,6 +1,6 @@
 require("dotenv/config");
 
-const { DiscordBot } = require("./services/discord/index.js");
+const { DiscordBot, DiscordStatus } = require("./services/discord/index.js");
 const { Collection, Events, MessageFlags } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -123,14 +123,14 @@ async function initTwitch() {
 
 if (start) {
     luciaApp.on(Events.ClientReady, async () => {
-        luciaApp.setStatus("busy");
+        luciaApp.setStatus(DiscordStatus.Busy);
         await initCommands();
         await initTwitch();
         luciaApp.initRoleButtons();
-        luciaApp.setStatus("standby");
+        luciaApp.setStatus(DiscordStatus.StandBy);
         setInterval(async () => {
             luciaApp.log("Performing Twitch maintenance...");
-            luciaApp.setStatus("busy");
+            luciaApp.setStatus(DiscordStatus.Busy);
             try {
                 const success = await twitchApp.performMaintenance({
                     oncallbackOnline: () => {
@@ -144,7 +144,7 @@ if (start) {
                 });
                 if (success) {
                     luciaApp.log("Twitch maintenance completed successfully");
-                    luciaApp.setStatus("standby");
+                    luciaApp.setStatus(DiscordStatus.StandBy);
                 }
             } catch (error) {
                 luciaApp.error(`[Error]: Error during Twitch maintenance: ${error}`);
@@ -167,10 +167,10 @@ if (start) {
         );
 
         if (!command) {
-            console.error(`No command found for ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toLocaleString()}`);
+            console.error(`No command found for ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}), At ${luciaApp.getTimestamp()}`);
             return;
         } else {
-            console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}) at ${new Date().toLocaleString()}`);
+            console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}), At ${luciaApp.getTimestamp()}`);
         }
 
         try {

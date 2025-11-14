@@ -5,17 +5,36 @@ const {
     GatewayIntentBits,
     IntentsBitField,
     MessageFlags,
-    PresenceUpdateStatus
+    PresenceUpdateStatus,
+    ButtonStyle
 } = require("discord.js");
 
-const maxButtonsPerRow = 5;
+const MaxButtonsPerRow = 5;
+
+const DiscordStatus = Object.freeze({
+    StandBy: "standby",
+    Busy: "busy",
+    Error: "error"
+});
+
+function getActivity(name = "น้องมาแอบฟัง") {
+    return {
+        name: name,
+        type: ActivityType.Listening,
+        state: "Lucian Solutions",
+        details: "LuciaLatte",
+        timestamps: {
+            start: Date.now(),
+        },
+    }
+}
 
 function buttonWrapper(buttons) {
     const components = [];
     let row = new ActionRowBuilder();
 
     for (let i = 0; i < buttons.length && i < 20; i++) {
-        if (i % maxButtonsPerRow === 0 && i > 0) {
+        if (i % MaxButtonsPerRow === 0 && i > 0) {
             components.push(row);
             row = new ActionRowBuilder();
         }
@@ -48,7 +67,6 @@ class DiscordBot extends Client {
         });
 
         this.name = name;
-        this.status = "standby";
         this.log_channel = options.log_channel;
         this.servers = options.servers ?? [];
         this.token = token;
@@ -98,45 +116,49 @@ class DiscordBot extends Client {
         });
     }
 
-    log(message) {
-        this.channels.cache.get(this.log_channel).send(message);
-        console.log(`[${this.name} LOG at ${new Date().toLocaleString()}]: ${message}`);
+    getTimestamp(time = null) {
+        const result = time ? new Date(time) : new Date();
+        return result.toLocaleString("en-GB", {
+            timeZone: "Asia/Bangkok",
+            hour12: false,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        });
     }
 
-    setStatus(status = "error") {
+    log(message) {
+        this.channels.cache.get(this.log_channel).send(message);
+        console.log(
+            `[${this.name} LOG at ${this.getTimestamp()}]: ${message}`
+        );
+    }
+
+    setStatus(status = DiscordStatus.Error) {
         switch (status) {
-            case "standby":
+            case DiscordStatus.StandBy:
+                this.log("Setting status to StandBy");
                 this.user.setPresence({
-                    activities: [
-                        {
-                            name: "น้องมาแอบฟัง",
-                            type: ActivityType.Listening,
-                        },
-                    ],
+                    activities: [getActivity()],
                     status: PresenceUpdateStatus.Online,
                 });
                 break;
-            case "busy":
+            case DiscordStatus.Busy:
+                this.log("Setting status to Busy");
                 this.user.setPresence({
-                    activities: [
-                        {
-                            name: "with the code!",
-                            type: ActivityType.Playing,
-                        },
-                    ],
+                    activities: [getActivity("น้องกำลังดูแลระบบ")],
                     status: PresenceUpdateStatus.DoNotDisturb,
                 });
                 break;
-            case "error":
+            case DiscordStatus.Error:
             default:
+                this.log("Setting status to Error");
                 this.user.setPresence({
-                    activities: [
-                        {
-                            name: "Lucia is now confused!",
-                            type: ActivityType.Listening,
-                        },
-                    ],
-                    status: PresenceUpdateStatus.DoNotDisturb,
+                    activities: [getActivity("น้องเจอปัญหา")],
+                    status: PresenceUpdateStatus.Idle,
                 });
         }
     }
@@ -207,12 +229,12 @@ class DiscordBot extends Client {
         if (!member) {
             this.log(`[Error]: Member not found`);
             return;
-        };
+        }
         const role = guild.roles.cache.find((r) => r.name === role_name);
         if (!role) {
             this.log(`[Error]: Role not found`);
             return;
-        };
+        }
         await member.roles.add(role);
     }
 
@@ -229,4 +251,5 @@ class DiscordBot extends Client {
 
 module.exports = {
     DiscordBot,
+    DiscordStatus
 };
