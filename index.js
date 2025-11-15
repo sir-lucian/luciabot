@@ -161,8 +161,6 @@ if (start) {
     luciaApp.on(Events.InteractionCreate, async (interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        await interaction.deferReply();
-
         const command = await interaction.client.commands.get(
             interaction.commandName
         );
@@ -172,6 +170,18 @@ if (start) {
             return;
         } else {
             console.log(`Executing command: ${interaction.commandName}, By: ${interaction.user.globalName} (${interaction.user.username}), At ${luciaApp.getTimestamp()}`);
+
+            switch (interaction.commandName) {
+                case "foodmenu":
+                case "drinksmenu":
+                    await interaction.deferReply();
+                    break;
+                case "clearmsg":
+                default:
+                    await interaction.deferReply({
+                        flags: MessageFlags.Ephemeral,
+                    });
+            }
         }
 
         try {
