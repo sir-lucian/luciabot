@@ -22,8 +22,8 @@ for (const file of serverFiles) {
     const filePath = path.join(serversPath, file);
     const server = require(filePath);
     servers.push(server);
-    if (server.twitch_id) {
-        twitchIds.push(server.twitch_id);
+    if (server.alert && server.alert.twitch_id) {
+        twitchIds.push(server.alert.twitch_id);
     }
 }
 
@@ -100,6 +100,7 @@ async function initCommands() {
 }
 
 async function initTwitch() {
+
     await twitchApp.refreshAccessToken(() => {
         luciaApp.log("Twitch access token refreshed");
     });
@@ -181,6 +182,7 @@ if (start) {
                 } else {
                     await interaction.reply(response);
                 }
+                console.log(`Command executed successfully`);
             }
         } catch (error) {
             console.error("Error executing command:", error);

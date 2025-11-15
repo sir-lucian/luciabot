@@ -1,6 +1,6 @@
 {
   "name": "luciabot",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "LuciaLatte, personal assistant on Discord",
   "main": "index.js",
   "scripts": {

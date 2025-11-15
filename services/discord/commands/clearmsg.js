@@ -1,41 +1,65 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clearmsg')
         .setDescription('Clear messages from user or bot in the channel.')
-        .addStringOption(option =>
+        .addUserOption(option =>
             option.setName('user')
                 .setDescription('Specify a user to delete their messages only')
                 .setRequired(false)
         ),
     async execute(interaction) {
-        const targetUser = interaction.options.getUser('user');
+        const targetUser = interaction.options.getUser('user') ?? null;
         const channel = interaction.channel;
 
-        await interaction.deferReply({ ephemeral: true });
-
         let deletedCount = 0;
+        let result = '';
+        let lastId = null;
 
         while (true) {
             // Fetch up to 100 messages
-            const messages = await channel.messages.fetch({ limit: 100 });
+            const options = { limit: 100 };
+            const messages = await channel.messages.fetch(options);
 
-            // Filter messages if user is specified
-            const filtered = targetUser
-                ? messages.filter(msg => msg.author.id === targetUser.id)
-                : messages;
+            if (messages.size === 0) {
+                result = `No more messages to delete.`;
+                break;
+            }
 
-            if (filtered.size === 0) break; // Stop if nothing to delete
+            if (messages.last() && (messages.last().id === lastId)) {
+                result = `No more messages to delete.`;
+                break;
+            } else {
+                lastId = messages.last().id;
+            }
 
+            // Filter out the deferred reply message from this interaction
+            let filtered = messages.filter(msg => msg.interaction?.id !== interaction.id);
+
+            // If a user is specified, further filter for their messages
+            if (targetUser) {
+                filtered = filtered.filter(msg => msg.author.id === targetUser.id);
+            }
+
+            if (filtered.size === 0) {
+                result = `No more messages to delete.`;
+                break;
+            }
+
+            try {
+                await channel.bulkDelete(filtered, true);
+                deletedCount += filtered.size;
+            } catch (error) {
+                result = `Error deleting messages: ${error.message}`;
+                break;
+            }
             // Bulk delete
-            await channel.bulkDelete(filtered, true);
-            deletedCount += filtered.size;
-
+            
             // Wait a bit to avoid rate limits
             await new Promise(res => setTimeout(res, 1000));
         }
 
-        await interaction.editReply(`✅ Deleted ${deletedCount} message(s) ${targetUser ? `from ${targetUser.tag}` : 'in this channel'}.`);
+        return result || `✅ Deleted ${deletedCount} message(s) ${targetUser ? `from ${targetUser.username}` : 'in this channel'}.`;
     }
 };
