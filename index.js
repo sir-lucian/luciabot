@@ -134,6 +134,7 @@ if (start) {
             luciaApp.setStatus(DiscordStatus.Busy);
             try {
                 const success = await twitchApp.performMaintenance({
+                    channelIds: twitchIds,
                     oncallbackOnline: () => {
                         luciaApp.log(
                             "Twitch stream is online (maintenance)"
@@ -148,7 +149,7 @@ if (start) {
                     luciaApp.setStatus(DiscordStatus.StandBy);
                 }
             } catch (error) {
-                luciaApp.error(`[Error]: Error during Twitch maintenance: ${error}`);
+                luciaApp.error(`Error during Twitch maintenance: ${error}`);
             }
         }, 1000 * 60 * 60 * 3.25); // Maintenance every ~3 hours
     });

@@ -76,7 +76,7 @@ class TwitchBot {
             console.log(
                 "Initializing Twitch Listeners... " +
                     options.channelIds.length +
-                    " channels"
+                    " channel" + (options.channelIds.length !== 1 ? "s" : "") 
             );
 
             if (
@@ -85,26 +85,20 @@ class TwitchBot {
                 options.channelIds.length > 0
             ) {
                 for (const channelId of options.channelIds) {
-                    this.listeners.push(
-                        new TwitchListener().initOnlineListener(
-                            this.eventListeners,
-                            channelId,
-                            () => {
-                                options.callbackOnline();
-                            }
-                        )
-                    );
-                    this.listeners.push(
-                        new TwitchListener().initOfflineListener(
-                            this.eventListeners,
-                            channelId,
-                            () => {
-                                options.callbackOffline();
-                            }
-                        )
-                    );
+                    this.listeners.push(this.eventListeners.onStreamOnline(
+                        channelId, () => {
+                            options.callbackOnline();
+                        }
+                    ));
+                    this.listeners.push(this.eventListeners.onStreamOffline(
+                        channelId, () => {
+                            options.callbackOffline();
+                        }
+                    ));
                 }
             }
+
+            console.log(`Initialized:`, this.listeners.length, `Twitch listeners`);
 
             return true;
         } catch (error) {
@@ -114,12 +108,17 @@ class TwitchBot {
 
     async stopMainListener() {
         try {
-            if (this.listeners.length > 0) {
+            const listenersCount = this.listeners.length;
+            if (listenersCount > 0) {
                 for (const listener of this.listeners) {
-                    await listener.stopListener();
+                    try {
+                        await listener.stop();
+                    } catch (error) {
+                        throw new Error(error);
+                    }
                 }
                 this.eventListeners.removeListener();
-                console.log("Removed all Twitch event listeners");
+                console.log(`Removed ${listenersCount} Twitch event ${listenersCount !== 1 ? "listeners" : "listener"}`);
 
                 this.listeners = [];
                 this.eventListeners = null;
@@ -132,20 +131,26 @@ class TwitchBot {
 
     async performMaintenance(
         options = {
+            channelIds: [],
             oncallbackOnline: () => {},
             oncallbackOffline: () => {},
         }
     ) {
         try {
             await this.stopMainListener();
-            await this.refreshAccessToken();
+            await this.refreshAccessToken(() => {
+                console.log("Refreshed Twitch Access Token");
+            });
             const valid = await this.checkToken();
             if (!valid) {
                 throw new Error("Invalid Twitch Access Token");
             }
             await this.initMainListener(
-                options.oncallbackOnline,
-                options.oncallbackOffline
+                {
+                    channelIds: options.channelIds || [],
+                    callbackOnline: options.oncallbackOnline || (() => {}),
+                    callbackOffline: options.oncallbackOffline || (() => {}),
+                }
             );
         } catch (error) {
             throw new Error(error);
@@ -155,68 +160,6 @@ class TwitchBot {
     }
 }
 
-class TwitchListener {
-    constructor() {
-        this.onlineListener = null;
-        this.offlineListener = null;
-    }
-
-    async initOnlineListener(
-        eventListener,
-        channelId,
-        callbackOnline = () => {}
-    ) {
-        try {
-            this.onlineListener = eventListener.onStreamOnline(
-                channelId,
-                callbackOnline
-            );
-
-            console.log(
-                "Initialized Twitch Online Listener for channel ID:",
-                channelId
-            );
-        } catch (error) {
-            throw new Error(error);
-        }
-    }
-
-    async initOfflineListener(
-        eventListener,
-        channelId,
-        callbackOffline = () => {}
-    ) {
-        try {
-            this.offlineListener = eventListener.onStreamOffline(
-                channelId,
-                callbackOffline
-            );
-            console.log(
-                "Initialized Twitch Offline Listener for channel ID:",
-                channelId
-            );
-        } catch (error) {
-            throw new Error(error);
-        }
-    }
-
-    async stopListener() {
-        try {
-            if (this.onlineListener) {
-                await this.onlineListener.stop();
-                console.log("Stopped online listener");
-            }
-            if (this.offlineListener) {
-                await this.offlineListener.stop();
-                console.log("Stopped offline listener");
-            }
-        } catch (error) {
-            throw new Error(error);
-        }
-    }
-}
-
 module.exports = {
     TwitchBot,
-    TwitchListener,
 };
