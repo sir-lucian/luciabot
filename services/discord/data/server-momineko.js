@@ -52,6 +52,8 @@ const embedsWelcome = [
         .setColor(0x7f00ff),
 ];
 
+const ROLES_LIST = [];
+
 module.exports = {
     id: process.env.DC_GUILD_ID_MOMINEKO,
     channels: [
@@ -64,4 +66,8 @@ module.exports = {
         },
     ],
     alert: undefined,
+    roles: ROLES_LIST,
+    actions: [
+        { id: 'join_server_momineko', role: 'StarPeople' }
+    ]
 };

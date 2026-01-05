@@ -17,6 +17,7 @@ const serverFiles = fs
 
 let servers = [];
 let twitchIds = [];
+let twitchNames = [];
 
 for (const file of serverFiles) {
     const filePath = path.join(serversPath, file);
@@ -24,6 +25,9 @@ for (const file of serverFiles) {
     servers.push(server);
     if (server.alert && server.alert.twitch_id) {
         twitchIds.push(server.alert.twitch_id);
+    }
+    if (server.alert && server.alert.twitch_name) {
+        twitchNames.push(server.alert.twitch_name);
     }
 }
 
@@ -41,45 +45,31 @@ const twitchApp = new TwitchBot({
 const start = luciaApp.initClient();
 
 function handleButtonInteraction(interaction) {
-    switch (interaction.customId) {
-        case "join_server_lucian":
-            luciaApp.doToggleRole("Visitor", interaction);
-            break;
-        case "join_server_momineko":
-            luciaApp.doToggleRole("StarPeople", interaction);
-            break;
-        case "girls_frontline":
-            luciaApp.doToggleRole("Girls Frontline", interaction);
-            break;
-        case "blue_archive":
-            luciaApp.doToggleRole("Blue Archive", interaction);
-            break;
-        case "city_builders":
-            luciaApp.doToggleRole("City Builders", interaction);
-            break;
-        case "minecraft":
-            luciaApp.doToggleRole("Minecraft", interaction);
-            break;
-        case "music_rhythm":
-            luciaApp.doToggleRole("Rhythms", interaction);
-            break;
-        case "arts_photography":
-            luciaApp.doToggleRole("Museum Goers", interaction);
-            break;
-        case "pokemon":
-            luciaApp.doToggleRole("Pokemon", interaction);
-            break;
-        case "uma_musume":
-            luciaApp.doToggleRole("Uma Musume", interaction);
-            break;
-        case "wordle":
-            luciaApp.doToggleRole("Wordle", interaction);
-            break;
-        default:
-            interaction.reply({
-                content: "Unknown button interaction.",
-                flags: MessageFlags.Ephemeral,
-            });
+    let handled = false;
+    for (const server of servers) {
+        if (server.roles) {
+            const role = server.roles.find(r => r.id === interaction.customId);
+            if (role) {
+                luciaApp.doToggleRole(role.role || role.name, interaction);
+                handled = true;
+                break;
+            }
+        }
+        if (server.actions) {
+            const action = server.actions.find(a => a.id === interaction.customId);
+            if (action) {
+                luciaApp.doToggleRole(action.role, interaction);
+                handled = true;
+                break;
+            }
+        }
+    }
+
+    if (!handled) {
+        interaction.reply({
+            content: "Unknown button interaction.",
+            flags: MessageFlags.Ephemeral,
+        });
     }
 }
 
@@ -109,11 +99,12 @@ async function initTwitch() {
         if (valid) {
             twitchApp.initMainListener({
                 channelIds: twitchIds,
-                callbackOnline: () => {
-                    luciaApp.log("Twitch stream is online");
-                },
-                callbackOffline: () => {
-                    luciaApp.log("Twitch stream is offline");
+                channelNames: twitchNames,
+                callbackOnline: (e) => {
+                    const server = servers.find(s => s.alert && s.alert.twitch_id === e.broadcasterId);
+                    if (server && server.alert && server.alert.message && server.alert.channel_id) {
+                        luciaApp.announce(server.alert.channel_id, server.alert.message);
+                    }
                 },
             });
         } else {
@@ -135,13 +126,12 @@ if (start) {
             try {
                 const success = await twitchApp.performMaintenance({
                     channelIds: twitchIds,
-                    oncallbackOnline: () => {
-                        luciaApp.log(
-                            "Twitch stream is online (maintenance)"
-                        );
-                    },
-                    oncallbackOffline: () => {
-                        luciaApp.log("Twitch stream is offline (maintenance)");
+                    channelNames: twitchNames,
+                    oncallbackOnline: (e) => {
+                        const server = servers.find(s => s.alert && s.alert.twitch_id === e.broadcasterId);
+                        if (server && server.alert && server.alert.message && server.alert.channel_id) {
+                            luciaApp.announce(server.alert.channel_id, server.alert.message);
+                        }
                     },
                 });
                 if (success) {

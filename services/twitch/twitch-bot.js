@@ -60,6 +60,7 @@ class TwitchBot {
     async initMainListener(
         options = {
             channelIds: [],
+            channelNames: [],
             callbackOnline: () => {},
             callbackOffline: () => {},
         }
@@ -86,13 +87,15 @@ class TwitchBot {
             ) {
                 for (const channelId of options.channelIds) {
                     this.listeners.push(this.eventListeners.onStreamOnline(
-                        channelId, () => {
-                            options.callbackOnline();
+                        channelId, (e) => {
+                            options.callbackOnline(e);
+                            console.log(`Twitch stream is online: ${options.channelNames.length > 0 ? options.channelNames[options.channelIds.indexOf(channelId)] : channelId}`);
                         }
                     ));
                     this.listeners.push(this.eventListeners.onStreamOffline(
-                        channelId, () => {
-                            options.callbackOffline();
+                        channelId, (e) => {
+                            options.callbackOffline(e);
+                            console.log(`Twitch stream is offline: ${options.channelNames.length > 0 ? options.channelNames[options.channelIds.indexOf(channelId)] : channelId}`);
                         }
                     ));
                 }
@@ -132,6 +135,7 @@ class TwitchBot {
     async performMaintenance(
         options = {
             channelIds: [],
+            channelNames: [],
             oncallbackOnline: () => {},
             oncallbackOffline: () => {},
         }
@@ -148,6 +152,7 @@ class TwitchBot {
             await this.initMainListener(
                 {
                     channelIds: options.channelIds || [],
+                    channelNames: options.channelNames || [],
                     callbackOnline: options.oncallbackOnline || (() => {}),
                     callbackOffline: options.oncallbackOffline || (() => {}),
                 }

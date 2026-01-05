@@ -5,6 +5,7 @@ module.exports = {
     channels: [],
     alert: {
         twitch_id: process.env.TTV_ID_NEKOSOUL,
+        twitch_name: "NeKoSO_UL",
         channel_id: process.env.DC_CHANNEL_NEKOSOUL_ALERT,
         message: `**Soul-chan just went live!**\nLet's go visit the rabbit house! :heart:\nhttps://twitch.tv/nekoso_ul`,
     }

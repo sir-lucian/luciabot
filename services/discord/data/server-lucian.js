@@ -11,8 +11,8 @@ const ROLES_LIST = [
     { id: 'blue_archive', name: 'Blue Archive', description: 'Rooms: Blue Archive', emoji: '📘' },
     { id: 'city_builders', name: 'City Builders', description: 'Rooms: City Builders', emoji: '🏙️' },
     { id: 'minecraft', name: 'Minecraft', description: 'Rooms: Minecraft, Minecraft Server Log', emoji: '⛏️' },
-    { id: 'music_rhythm', name: 'Music & Rhythm Games', description: 'Rooms: Musique et Otoge', emoji: '🎵' },
-    { id: 'arts_photography', name: 'Arts & Photography', description: 'Rooms: La Galerie D\'Art', emoji: '🎨' },
+    { id: 'music_rhythm', name: 'Music & Rhythm Games', role: 'Rhythms', description: 'Rooms: Musique et Otoge', emoji: '🎵' },
+    { id: 'arts_photography', name: 'Arts & Photography', role: 'Museum Goers', description: 'Rooms: La Galerie D\'Art', emoji: '🎨' },
     { id: 'pokemon', name: 'Pokémon', description: 'Rooms: Pokémon', emoji: '🐹' },
     { id: 'uma_musume', name: 'Uma Musume', description: 'Rooms: Uma Musume Pretty Derby', emoji: '🐴' },
     { id: 'wordle', name: 'Wordle', description: 'Rooms: Wordle', emoji: '🧩' },
@@ -127,4 +127,8 @@ module.exports = {
         },
     ],
     alert: undefined,
+    roles: ROLES_LIST,
+    actions: [
+        { id: 'join_server_lucian', role: 'Visitor' }
+    ]
 };
