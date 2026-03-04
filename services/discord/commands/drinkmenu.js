@@ -18,7 +18,7 @@ module.exports = {
                     { name: 'partymode', value: 'partymode' },)),
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
-        let fetchUrl = "https://api.lucian.solutions/api.drinksmenu.php";
+        let fetchUrl = "https://lucian.solutions/api/drinksmenu";
         if (category) {
             fetchUrl += "?args1="+category;
         }

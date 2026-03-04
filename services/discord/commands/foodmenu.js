@@ -25,7 +25,7 @@ module.exports = {
     async execute(interaction) {
         const category = interaction.options.getString('category') ?? null;
         const halal = interaction.options.getString('halal') === 'yes' ? 'halal' : null;
-        let fetchUrl = "https://api.lucian.solutions/api.foodmenu.php";
+        let fetchUrl = "https://lucian.solutions/api/foodmenu";
         if (category && halal) {
             fetchUrl += "?args1="+category+"&args2="+halal;
         } else if (category && !halal) {
