@@ -85,7 +85,7 @@ const embedsWelcome = [
     new EmbedBuilder()
         .setTitle("Ya~ho☆")
         .setDescription("It's Lucia! This is La résidence de Lucian!")
-        .setImage("https://lucian.solutions/images/22.jpg")
+        .setImage("https://lucian.solutions/assets/ls-seo.jpg")
         .setAuthor({
             name: embeds.getEmbedsAuthor().name,
             iconURL: embeds.getEmbedsAuthor().iconURL,
@@ -99,7 +99,7 @@ const embedsRoles = [
         .setTitle("Ya~ho☆")
         .setDescription("Please Select Your Interests")
         .setFields(transformRolesToFields())
-        .setImage("https://lucian.solutions/images/239t.png")
+        .setImage("https://files.lucian.solutions/files/posts/2025/2026-01-01-01-1.png")
         .setAuthor({
             name: embeds.getEmbedsAuthor().name,
             iconURL: embeds.getEmbedsAuthor().iconURL,
